@@ -422,7 +422,7 @@ sub renderMetaData {
     if ($theAction eq 'view') {
       $theHeader = '<div class=\'metaDataView '.($params->{_gotWriteAccess}?'':'metaDataReadOnly').'\'>$n<table class="foswikiTable"><tr><th>$n'.join(' </th><th>$n', 
         map {
-          my $title = $_->{name}; defined($params->{$title.'_title'})?$params->{$title.'_title'}:$title
+          my $title = $_->{title}; defined($params->{$title.'_title'})?$params->{$title.'_title'}:$title
         } 
         grep {$_->{name} ne 'name'}
         @selectedFields).' </th></tr>$n';

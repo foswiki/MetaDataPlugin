@@ -28,7 +28,7 @@
     var self = this, 
         $actions = $row.find(".metaDataActions"),
         rowPos = $row.position(),
-        height = $actions.outerHeight()-1;
+        height = $actions.outerHeight()-2;
 
     self.elem.find(".hover").removeClass("hover");
     $row.addClass("hover");

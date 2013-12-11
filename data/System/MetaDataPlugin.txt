@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="ProjectContributor" comment="reprev" date="1335363042" format="1.1" reprev="2" version="2"}%
+%META:TOPICINFO{author="micha" comment="reprev" date="1377700547" format="1.1" reprev="2" version="3"}%
 ---+!! %TOPIC%
 %SHORTDESCRIPTION%
 
@@ -122,7 +122,7 @@ render a modal edit dialog according to the associated !DataForm definition.
 
 | *Parameter* | *Description* | *Default* |
 | "..." | !MetaData key | |
-| topic | the location where to store the newly created records |
+| topic | the location where to store the newly created records | |
 | format | format string to render the button | defined in the =metadataplugin.tmpl= template |
 | template | name of the TMPL:DEF to render the button | metadata::new |
 | title | display title for the modal dialog | |

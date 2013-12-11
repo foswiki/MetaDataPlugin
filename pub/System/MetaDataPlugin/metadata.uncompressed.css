@@ -2,25 +2,16 @@
   width:100%;
   position:relative;
   cursor:pointer;
-  border-collapse:separate;
 }
 .metaDataReadOnly table {
   margin-right:0px;
 }
 .metaDataActions,
 .metaDataView table tr.hover td {
-  border-color:#E7B6B9 !important;
-}
-.metaDataActions,
-.metaDataView table tr.hover td {
-  background-color:#FBE3E4;
+  border-color:#e4e4e4;
+  background-color:#f4f4f4;
 }
 
-.metaDataView tbody tr td {
-  border-width:1px 0px 1px 0px;
-  border-style:solid;
-  border-color:transparent;
-}
 .metaDataActions {
   display:none;
   position:absolute;
@@ -28,6 +19,7 @@
   border-style:solid;
   border-width:1px 1px 0 1px;
   border-radius:0.5em 0.5em 0 0;
+  padding:0 0.2em;
 }
 .metaDataActions a {
   padding:5px;
