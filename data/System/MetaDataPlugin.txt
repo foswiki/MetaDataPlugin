@@ -190,11 +190,12 @@ have a database of efforts recorded on that tracker.
 -->
 
 |  Author(s): | Michael Daum|
-|  Copyright: | &copy; 2011-2013 Michael Daum http://michaeldaumconsulting.com |
+|  Copyright: | &copy; 2011-2014 Michael Daum http://michaeldaumconsulting.com |
 |  License: | [[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]] |
 |  Version: | %$VERSION% |
 |  Release: | %$RELEASE% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  18 Mar 2014: | added support for =rev= url parameter to render meta data of an old revision |
 |  10 Jul 2013: | fixed dependencies on jQuery plugins; \
                   improved params to NEWMETADATA; \
                   improved table ui |

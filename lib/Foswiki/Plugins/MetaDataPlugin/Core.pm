@@ -1,6 +1,6 @@
 # Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# MetaDataPlugin is Copyright (C) 2011-2013 Michael Daum http://michaeldaumconsulting.com
+# MetaDataPlugin is Copyright (C) 2011-2014 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -31,7 +31,7 @@ use constant DEBUG => 0; # toggle me
 
 ##############################################################################
 sub writeDebug {
-  print STDERR "MetaDataPlugin::Core - $_[0]\n" if DEBUG;
+  Foswiki::Func::writeDebug("MetaDataPlugin::Core - $_[0]") if DEBUG;
 }
 
 ##############################################################################
@@ -193,13 +193,14 @@ sub RENDERMETADATA {
   my $topic = $params->{topic} || $this->{baseTopic};
   my $web = $params->{web} || $this->{baseWeb};
   my $warn = Foswiki::Func::isTrue($params->{warn}, 1);
+  my $rev = $params->{revision};
 
   ($web, $topic) = Foswiki::Func::normalizeWebTopicName($web, $topic);
 
   my $action = $params->{action} || 'view';
   my $wikiName = Foswiki::Func::getWikiName();
 
-  my $topicObj = getTopicObject($this, $web, $topic); 
+  my $topicObj = getTopicObject($this, $web, $topic, $rev); 
 
   $params->{_gotViewAccess} = Foswiki::Func::checkAccessPermission("VIEW", $wikiName, undef, $topic, $web, $topicObj);
   $params->{_gotWriteAccess} = Foswiki::Func::checkAccessPermission("CHANGE", $wikiName, undef, $topic, $web, $topicObj);
@@ -694,8 +695,8 @@ sub renderMetaData {
 
       $title = $fieldValue if $fieldName =~ /^(Topic)?Title/i;
 
-      $row =~ s/\$$fieldName/$line/g;
-      $row =~ s/\$orig$fieldName/$fieldValue/g;
+      $row =~ s/\$$fieldName\b/$line/g;
+      $row =~ s/\$orig$fieldName\b/$fieldValue/g;
 
       push @fieldResult, $line;
 
@@ -764,19 +765,20 @@ sub renderMetaData {
 
 ##############################################################################
 sub getTopicObject {
-  my ($this, $web, $topic) = @_;
+  my ($this, $web, $topic, $rev) = @_;
 
   #writeDebug("called getTopicObject()");
 
   $web ||= '';
   $topic ||= '';
+  $rev ||= '';
   
   $web =~ s/\//\./go;
-  my $key = $web.'.'.$topic;
+  my $key = $web.'.'.$topic.'@'.$rev;
   my $topicObj = $this->{_topicObjs}{$key};
   
   unless ($topicObj) {
-    ($topicObj, undef) = Foswiki::Func::readTopic($web, $topic);
+    ($topicObj, undef) = Foswiki::Func::readTopic($web, $topic, $rev);
     $this->{_topicObjs}{$key} = $topicObj;
   }
 
