@@ -640,10 +640,17 @@ sub renderMetaData {
 
       $line = '<noautolink>'.$line.'</noautolink>' unless $fieldAutolink;
 
-      # some must be expanded before renderForDisplay/renderForEdit
+      # some must be expanded before renderForDisplay/renderForDisplay
       $line =~ s/\$values\b/$fieldAllowedValues/g;
       $line =~ s/\$origvalues\b/$fieldOrigAllowedValues/g;
       $line =~ s/\$title\b/$fieldTitle/g;
+
+      # For Foswiki > 1.2, treat $value ourselves to get a consistent
+      # behavior across all releases
+      if ($line =~ /\$value\b/ && $field->can('getDisplayValue')) { 
+        my $value = $field->getDisplayValue($fieldValue);
+        $line =~ s/\$value(\(display\))?/$value/g;
+      }
 
       my $fieldExtra = '';
       my $fieldEdit = '';
