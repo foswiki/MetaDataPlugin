@@ -646,10 +646,12 @@ sub renderMetaData {
       $line =~ s/\$title\b/$fieldTitle/g;
 
       # For Foswiki > 1.2, treat $value ourselves to get a consistent
-      # behavior across all releases
-      if ($line =~ /\$value\b/ && $field->can('getDisplayValue')) { 
-        my $value = $field->getDisplayValue($fieldValue);
-        $line =~ s/\$value(\(display\))?/$value/g;
+      # behavior across all releases:
+      # - patch in (display) value as $value
+      # - use raw value as $origvalue
+      my $origValue = $fieldValue;
+      if ($field->{type} =~ /\+values/ && $field->can('getDisplayValue')) { 
+        $fieldValue = $field->getDisplayValue($fieldValue);
       }
 
       my $fieldExtra = '';
@@ -661,11 +663,11 @@ sub renderMetaData {
         if ($theAction eq 'edit') {
           if ($Foswiki::Plugins::VERSION > 2.0) {
             ($fieldExtra, $fieldEdit) = 
-              $field->renderForEdit($topicObj, $fieldValue);
+              $field->renderForEdit($topicObj, $origValue);
           } else {
             # pre-TOM
             ($fieldExtra, $fieldEdit) = 
-              $field->renderForEdit($topicObj->web, $topicObj->topic, $fieldValue);
+              $field->renderForEdit($topicObj->web, $topicObj->topic, $origValue);
           }
         } else {
           $line = $field->renderForDisplay($line, $fieldValue, {
@@ -698,7 +700,7 @@ sub renderMetaData {
       $line =~ s/\$(tooltip|description)\b/$fieldDescription/g;
       $line =~ s/\$title\b/$fieldTitle/g;
       $line =~ s/\$extra\b/$fieldExtra/g;
-      $line =~ s/\$origvalue\b/$fieldValue/g;
+      $line =~ s/\$origvalue\b/$origValue/g;
 
       $title = $fieldValue if $fieldName =~ /^(Topic)?Title/i;
 
