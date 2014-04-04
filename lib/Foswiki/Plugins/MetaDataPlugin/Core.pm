@@ -650,7 +650,7 @@ sub renderMetaData {
       # - patch in (display) value as $value
       # - use raw value as $origvalue
       my $origValue = $fieldValue;
-      if ($field->{type} =~ /\+values/ && $field->can('getDisplayValue')) { 
+      if ($field->can('getDisplayValue')) { 
         $fieldValue = $field->getDisplayValue($fieldValue);
       }
 
@@ -673,6 +673,7 @@ sub renderMetaData {
           $line = $field->renderForDisplay($line, $fieldValue, {
             bar=>'|', # SMELL: keep bars
             newline=>'$n', # SMELL: keep newlines
+            display=>1
           }); # SMELL what about the attrs param in Foswiki::Form; wtf is this attr anyway
         }
 
