@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="micha" comment="reprev" date="1398761969" format="1.1" reprev="2" version="4"}%
+%META:TOPICINFO{author="ProjectContributor" comment="reprev" date="1398761969" format="1.1" reprev="2" version="4"}%
 ---+!! %TOPIC%
 %SHORTDESCRIPTION%
 
@@ -195,7 +195,9 @@ have a database of efforts recorded on that tracker.
 |  Version: | %$VERSION% |
 |  Release: | %$RELEASE% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
-|  20 May 2014: | reworked delete; implemented save handlers for meta data; fixed table markup to pleae Foswiki:Extensions:JQDataTablesPlugin | 
+|  20 May 2014: | reworked delete; implemented save handlers for meta data; \
+                  fixed table markup to pleae Foswiki:Extensions:JQDataTablesPlugin; \
+                  fixed handling of =filter= parameter | 
 |  03 Mar 2014: | work around different styles of inconsistencies in =renderForDisplay= across foswiki core releases |
 |  18 Mar 2014: | added support for =rev= url parameter to render meta data of an old revision |
 |  10 Jul 2013: | fixed dependencies on jQuery plugins; \

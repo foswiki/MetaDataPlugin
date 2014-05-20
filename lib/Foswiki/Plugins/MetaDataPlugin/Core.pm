@@ -323,11 +323,12 @@ sub renderMetaData {
   }
 
   if (defined $theFilter) {
+    $theInclude = ''; # dummy
     %excludeMap = ();
     %includeMap = ();
     my $queryParser = $this->getQueryParser();
     my $error;
-    my $query = "'".$topicObj->getPath()."'/".$metaData."[".$theFilter."].name";
+    my $query = "'".$topicObj->getPath()."'/META:".uc($metaData)."[".$theFilter."].name";
     try {
       my $node = $queryParser->parse($query);
       my $result = $node->evaluate(tom => $topicObj, data => $topicObj);
@@ -335,7 +336,6 @@ sub renderMetaData {
         if (ref($result) ne 'ARRAY') {
           $result = [$result];
         }
-        $theInclude = ''; # dummy
         %includeMap = map {$_ => 1} @$result;
       }
     }
