@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="ProjectContributor" comment="reprev" date="1377700547" format="1.1" reprev="2" version="3"}%
+%META:TOPICINFO{author="micha" comment="reprev" date="1398761969" format="1.1" reprev="2" version="4"}%
 ---+!! %TOPIC%
 %SHORTDESCRIPTION%
 
@@ -57,7 +57,7 @@ topic edit screen.
 | footer | footer string to apped to the output | |
 | separator | string to be put between each formatted output per formfield | |
 | map="&lt;fieldname1>=&lt;title1>, &lt;fieldname2>=&lt;title2>, ..." | allows to map a fieldname to a different title string in the edit interface | original fieldnames are used as title string |
-| edittitle | title of the modal dialog when editing a metadata record |
+| edittitle | title of the modal dialog when editing a metadata record | |
 | valueseparator | | |
 | include | a comma separated list of record names to be included in the output, e.g. "id1, id2, id5" | |
 | exclude | a comma separated list of record names to be excluded from the output | |
@@ -195,6 +195,8 @@ have a database of efforts recorded on that tracker.
 |  Version: | %$VERSION% |
 |  Release: | %$RELEASE% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  20 May 2014: | reworked delete; implemented save handlers for meta data; fixed table markup to pleae Foswiki:Extensions:JQDataTablesPlugin | 
+|  03 Mar 2014: | work around different styles of inconsistencies in =renderForDisplay= across foswiki core releases |
 |  18 Mar 2014: | added support for =rev= url parameter to render meta data of an old revision |
 |  10 Jul 2013: | fixed dependencies on jQuery plugins; \
                   improved params to NEWMETADATA; \

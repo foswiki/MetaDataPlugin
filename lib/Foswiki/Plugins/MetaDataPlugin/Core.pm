@@ -27,11 +27,11 @@ use Foswiki::Plugins::JQueryPlugin ();
 use Error qw( :try );
 #use Data::Dumper();
 
-use constant DEBUG => 0; # toggle me
+use constant TRACE => 0; # toggle me
 
 ##############################################################################
 sub writeDebug {
-  Foswiki::Func::writeDebug("MetaDataPlugin::Core - $_[0]") if DEBUG;
+  Foswiki::Func::writeDebug("MetaDataPlugin::Core - $_[0]") if TRACE;
 }
 
 ##############################################################################
@@ -98,16 +98,30 @@ sub getQueryParser {
 
 ##############################################################################
 sub registerDeleteHandler {
-  my ($this, $metaData, $function, $options) = @_;
+  my ($this, $function, $options) = @_;
 
   #writeDebug("called registerDeleteHandler()");
 
-  push @{$this->{deleteHandler}{$metaData}}, {
+  push @{$this->{deleteHandler}}, {
     function => $function,
     options => $options,
   };
 
   #writeDebug("done registerDeleteHandler()");
+}
+
+##############################################################################
+sub registerSaveHandler {
+  my ($this, $function, $options) = @_;
+
+  #writeDebug("called registerSaveHandler()");
+
+  push @{$this->{saveHandler}}, {
+    function => $function,
+    options => $options,
+  };
+
+  #writeDebug("done registerSaveHandler()");
 }
 
 ##############################################################################
@@ -390,7 +404,14 @@ sub renderMetaData {
       $fieldName =~ s/\s*$//;
       $fieldName =~ s/^\s*//;
       my $field;
-      if ($fieldName eq 'name') {
+      if ($fieldName eq 'index') {
+        $field = new Foswiki::Form::Label(
+          session    => $this->{session},
+          name       => 'index',
+          title      => '#',
+          description => '',
+        );
+      }  elsif ($fieldName eq 'name') {
         $field = new Foswiki::Form::Label(
           session    => $this->{session},
           name       => 'name',
@@ -421,12 +442,12 @@ sub renderMetaData {
   # default formats
   unless (defined $theHeader) {
     if ($theAction eq 'view') {
-      $theHeader = '<div class=\'metaDataView '.($params->{_gotWriteAccess}?'':'metaDataReadOnly').'\'>$n<table class="foswikiTable"><tr><th>$n'.join(' </th><th>$n', 
+      $theHeader = '<div class=\'metaDataView '.($params->{_gotWriteAccess}?'':'metaDataReadOnly').'\'>$n<table class="foswikiTable"><thead><tr><th>$n'.join(' </th><th>$n', 
         map {
           my $title = $_->{title}; defined($params->{$title.'_title'})?$params->{$title.'_title'}:$title
         } 
         grep {$_->{name} ne 'name'}
-        @selectedFields).' </th></tr>$n';
+        @selectedFields).' </th></tr></thead><tbody>$n';
     } else {
       $theHeader = '<div class=\'metaDataEdit foswikiFormSteps\'>$n';
     }
@@ -460,7 +481,7 @@ sub renderMetaData {
 
   unless (defined $theFooter) {
     if ($theAction eq 'view') {
-      $theFooter = '</table></div>';
+      $theFooter = '</tbody></table></div>';
     } else {
       $theFooter = '</div>';
     }
@@ -569,7 +590,13 @@ sub renderMetaData {
         $fieldDefault = $field->getDefaultValue() || '';
       } 
 
-      my $fieldValue = $record->{$fieldName};
+      my $fieldValue;
+
+      if ($fieldName eq 'index') {
+        $fieldValue = $index;
+      } else {
+        $fieldValue = $record->{$fieldName};
+      }
 
       # try not to break foswiki tables
 #      if ($theAction eq 'view' && defined($fieldValue)) {
@@ -885,6 +912,27 @@ sub beforeSaveHandler {
       my $metaData = $1;
       #my $name = $2;
       my $record = $records{$item};
+
+      # call save handlers
+      if (defined $this->{saveHandler}) {
+        foreach my $saveHandler (@{$this->{saveHandler}}) {
+          my $function = $saveHandler->{function};
+          my $result;
+          my $error;
+
+          writeDebug("executing $function");
+          try {
+            no strict 'refs';
+            $result = &$function($web, $topic, $metaData, $record, $saveHandler->{options});
+            use strict 'refs';
+          } catch Error::Simple with {
+            $error = shift;
+          };
+
+          print STDERR "error executing saveHandler $function: ".$error."\n" if defined $error;
+        }
+      }
+
       $meta->putKeyed($metaData, $record);
     } else {
       die "what's that record: $item"; # never reach
@@ -1005,17 +1053,16 @@ sub jsonRpcDelete {
   throw Foswiki::Contrib::JsonRpcContrib::Error(1001, "$metaData name=$name not found")
     unless $record;
 
-  #writeDebug("$this, checking deleteHandler for $metaDataKey ... ".$this->{deleteHandler}{$metaDataKey});
-  if (defined $this->{deleteHandler}{$metaDataKey}) {
-    foreach my $deleteHandler (@{$this->{deleteHandler}{$metaDataKey}}) {
+  #writeDebug("$this, checking deleteHandler ... ");
+  if (defined $this->{deleteHandler}) {
+    foreach my $deleteHandler (@{$this->{deleteHandler}}) {
       my $function = $deleteHandler->{function};
       my $result;
       my $error;
 
-      #writeDebug("executing $function for $metaDataKey");
       try {
         no strict 'refs';
-        $result = &$function($web, $topic, $record, $deleteHandler->{options});
+        $result = &$function($web, $topic, $metaDataKey, $record, $deleteHandler->{options});
         use strict 'refs';
       } catch Error::Simple with {
         $error = shift;

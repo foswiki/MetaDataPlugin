@@ -24,8 +24,8 @@ use Foswiki::Contrib::JsonRpcContrib ();
 use Foswiki::Plugins::MetaDataPlugin::Core();
 use Error qw( :try );
 
-our $VERSION = '3.30';
-our $RELEASE = '3.30';
+our $VERSION = '4.00';
+our $RELEASE = '4.00';
 our $SHORTDESCRIPTION = 'Bring custom meta data to wiki apps';
 our $NO_PREFS_IN_TOPIC = 1;
 our $core;
@@ -101,6 +101,11 @@ sub finishPlugin {
 ##############################################################################
 sub registerDeleteHandler {
   return $core->registerDeleteHandler(@_);
+}
+
+##############################################################################
+sub registerSaveHandler {
+  return $core->registerSaveHandler(@_);
 }
 
 ##############################################################################
