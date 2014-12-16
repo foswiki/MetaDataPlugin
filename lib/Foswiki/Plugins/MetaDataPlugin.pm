@@ -24,13 +24,22 @@ use Foswiki::Contrib::JsonRpcContrib ();
 use Foswiki::Plugins::MetaDataPlugin::Core();
 use Error qw( :try );
 
-our $VERSION = '4.01';
-our $RELEASE = '4.01';
+use Foswiki::Request ();
+
+BEGIN {
+  # Backwards compatibility for Foswiki 1.1.x
+  unless (Foswiki::Request->can('multi_param')) {
+    no warnings 'redefine';
+    *Foswiki::Request::multi_param = \&Foswiki::Request::param;
+    use warnings 'redefine';
+  }
+}
+
+our $VERSION = '4.10';
+our $RELEASE = '4.10';
 our $SHORTDESCRIPTION = 'Bring custom meta data to wiki apps';
 our $NO_PREFS_IN_TOPIC = 1;
 our $core;
-our $baseWeb;
-our $baseTopic;
 
 ##############################################################################
 sub earlyInitPlugin {
@@ -44,7 +53,6 @@ sub earlyInitPlugin {
 
 ##############################################################################
 sub initPlugin {
-  ($baseTopic, $baseWeb) = @_;
 
   # register macro handlers
   Foswiki::Func::registerTagHandler('RENDERMETADATA', sub {
@@ -57,8 +65,7 @@ sub initPlugin {
   });
 
   # register meta definitions
-  my $webMetaData = Foswiki::Func::getPreferencesValue("WEBMETADATA") || '';
-  registerMetaData($webMetaData);
+  registerMetaData();
 
 #  Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "get", sub {
 #     my $session = shift;
@@ -95,7 +102,7 @@ sub initPlugin {
 
 ##############################################################################
 sub finishPlugin {
-  undef $core;
+  $core = undef;
 }
 
 ##############################################################################
@@ -117,6 +124,12 @@ sub beforeSaveHandler {
 sub registerMetaData {
   my $topics = shift;
 
+  my $session = $Foswiki::Plugins::SESSION;
+  my $baseWeb = $session->{webName};
+
+  $topics = Foswiki::Func::getPreferencesValue("WEBMETADATA") || ''
+    unless defined $topics;
+
   foreach my $item (split(/\s*,\s*/, $topics)) {
     my ($web, $topic) = Foswiki::Func::normalizeWebTopicName($baseWeb, $item);
     my $metaDef = getMetaDataDefinition($web, $topic);
@@ -132,6 +145,9 @@ sub registerMetaData {
 # (key, alias) used to register metadata types based on this DataForm
 sub topicName2MetaData {
   my $topic = shift;
+
+  my $session = $Foswiki::Plugins::SESSION;
+  my $baseWeb = $session->{webName};
 
   # 1. strip off the the web part
   (undef, $topic) = Foswiki::Func::normalizeWebTopicName($baseWeb, $topic);

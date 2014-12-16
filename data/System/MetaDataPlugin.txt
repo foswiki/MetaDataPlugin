@@ -52,7 +52,7 @@ topic edit screen.
 | name | select the id of a !MetaData record to be extracted | all records attached to the given topic |
 | topic | the topic to extract the !MetaData from | the current topic |
 | web | the web part of the topic to be processed; note: a web part in the =topic= parameter will override any value specified via the =web= parameter | the current web |
-| format | format string to render each formfield with, more info below |  |
+| format | format string to render each meta-data record with, more info below |  |
 | header | header string to be put in front of the output | |
 | footer | footer string to apped to the output | |
 | separator | string to be put between each formatted output per formfield | |
@@ -74,7 +74,7 @@ topic edit screen.
 | hideempty | boolean flag to hide/show empty formfields | off |
 | warn | boolean flag to suppress error messages | on |
 | autolink | boolean flag to enable/prevent !WikiWord linking | on |
-| fieldformat | format string for a single formfield value in a row | |
+| fieldformat | format string for a single formfield value in a row | =$value= |
 | &lt;field_name>_attributes, %BR% \
   &lt;field_name>_autolink, %BR% \
   &lt;field_name>_default, %BR% \
@@ -195,6 +195,7 @@ have a database of efforts recorded on that tracker.
 |  Version: | %$VERSION% |
 |  Release: | %$RELEASE% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  16 Dec 2014: | don't cache web.topic in plugin initializer; fixed call to CGI::param() |
 |  20 May 2014: | reworked delete; implemented save handlers for meta data; \
                   fixed table markup to pleae Foswiki:Extensions:JQDataTablesPlugin; \
                   fixed handling of =filter= parameter | 

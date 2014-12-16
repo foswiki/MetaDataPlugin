@@ -25,6 +25,7 @@ use Foswiki::Time ();
 use Foswiki::Form::Label ();
 use Foswiki::Plugins::JQueryPlugin ();
 use Error qw( :try );
+
 #use Data::Dumper();
 
 use constant TRACE => 0; # toggle me
@@ -41,8 +42,6 @@ sub new {
   #writeDebug("called new()");
 
   my $this = bless({
-    baseWeb => $session->{webName},
-    baseTopic => $session->{topicName},
     session => $session,
   }, $class);
 
@@ -132,7 +131,7 @@ sub NEWMETADATA {
   $this->init();
 
   my $theMetaData = lc($params->{_DEFAULT} || $params->{meta} || '');
-  my $theWarn = Foswiki::Func::isTrue($params->{warn}, 1);
+  my $theWarn = Foswiki::Func::isTrue($params->{warn}, 0);
 
   my $metaDataKey = uc($theMetaData);
   my $metaDataDef = $Foswiki::Meta::VALIDATE{$metaDataKey};
@@ -142,7 +141,7 @@ sub NEWMETADATA {
   my $theButtonTitle = $params->{buttontitle};
   my $theFormat = $params->{format};
   my $theTemplate = $params->{template} || 'metadata::new';
-  my $theTopic = $params->{topic} || $this->{baseWeb}.'.'.$this->{baseTopic};
+  my $theTopic = $params->{topic} || $this->{session}{webName}.'.'.$this->{session}{topicName};
   my $theMap = $params->{map} || '';
   my $theIcon = $params->{icon} || 'add';
 
@@ -172,7 +171,7 @@ sub NEWMETADATA {
   $theTitle = '%MAKETEXT{"New [_1]" args="'.ucfirst($theMetaData).'"}%' unless defined $theTitle;
   $theButtonTitle = $theTitle unless defined $theButtonTitle;
 
-  my ($web, $topic) = Foswiki::Func::normalizeWebTopicName($this->{baseWeb}, $theTopic);
+  my ($web, $topic) = Foswiki::Func::normalizeWebTopicName($this->{session}{webName}, $theTopic);
   $theTopic = "$web.$topic";
 
   my $wikiName = Foswiki::Func::getWikiName();
@@ -204,8 +203,8 @@ sub RENDERMETADATA {
   $this->init();
 
   my $metaData  = $params->{_DEFAULT};
-  my $topic = $params->{topic} || $this->{baseTopic};
-  my $web = $params->{web} || $this->{baseWeb};
+  my $topic = $params->{topic} || $this->{session}{topicName};
+  my $web = $params->{web} || $this->{session}{webName};
   my $warn = Foswiki::Func::isTrue($params->{warn}, 1);
   my $rev = $params->{revision};
 
@@ -356,7 +355,7 @@ sub renderMetaData {
   my $metaDataDef = $Foswiki::Meta::VALIDATE{$metaDataKey};
   return ($theWarn?inlineError("can't find meta data definition for $metaDataKey"):'') unless defined $metaDataDef;
 
-  my $formWeb = $this->{baseWeb};
+  my $formWeb = $this->{session}{webName};
   my $formTopic = $metaDataDef->{form};
 
   $formTopic = $Foswiki::cfg{SystemWebName}.'.'.ucfirst(lc($metaData)).'Form' 
@@ -621,7 +620,7 @@ sub renderMetaData {
         my $urlValue;
         my $key = 'META_'.uc($metaData).'_'.$fieldName;
         if ($field->isMultiValued) {
-          my @urlValue = $query->param($key);
+          my @urlValue = $query->multi_param($key);
           $urlValue = join(", ", @urlValue) if @urlValue;
         } else {
           $urlValue = $query->param($key);
@@ -885,7 +884,7 @@ sub beforeSaveHandler {
 
     my $value;
 
-    my @value = $request->param($urlParam);
+    my @value = $request->multi_param($urlParam);
     if (@value) {
       $value = join(", ", @value);
       $value =~ s/,\s*$//g;
@@ -965,8 +964,8 @@ sub getMaxId {
 sub jsonRpcLockTopic {
   my ($this, $request) = @_;
 
-  my $web = $this->{baseWeb};
-  my $topic = $request->param('topic') || $this->{baseTopic};
+  my $web = $this->{session}{webName};
+  my $topic = $request->param('topic') || $this->{session}{topicName};
   ($web, $topic) = Foswiki::Func::normalizeWebTopicName($web, $topic);
 
   my (undef, $loginName, $unlockTime) = Foswiki::Func::checkTopicEditLock($web, $topic);
@@ -992,8 +991,8 @@ sub jsonRpcLockTopic {
 sub jsonRpcUnlockTopic {
   my ($this, $request) = @_;
 
-  my $web = $request->{baseWeb};
-  my $topic = $request->param('topic') || $this->{baseTopic};
+  my $web = $request->{session}{webName};
+  my $topic = $request->param('topic') || $this->{session}{topicName};
   ($web, $topic) = Foswiki::Func::normalizeWebTopicName($web, $topic);
 
   writeDebug("called jsonRpcUnlockTopic($web, $topic)");
@@ -1021,8 +1020,8 @@ sub jsonRpcDelete {
 
   #writeDebug("called jsonRpcDelete()");
 
-  my $web = $this->{baseWeb};
-  my $topic = $this->{baseTopic};
+  my $web = $this->{session}{webName};
+  my $topic = $this->{session}{topicName};
 
   my $loginName;
   (undef, $loginName) = Foswiki::Func::checkTopicEditLock($web, $topic);
