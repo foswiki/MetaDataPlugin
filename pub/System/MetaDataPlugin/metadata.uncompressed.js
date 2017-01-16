@@ -1,5 +1,5 @@
-(function($) {
 "use strict";
+(function($) {
 
   // global defaults
   var 
@@ -27,13 +27,10 @@
   // show actions 
   MetaDataView.prototype.showActions = function($row) {
     var self = this, 
-        $actions = $row.find(".metaDataActions"),
-        rowPos = $row.position(),
-        height = $actions.outerHeight()-2;
+        $actions = $row.find(".metaDataActions");
 
     self.elem.find(".hover").removeClass("hover");
     $row.addClass("hover");
-    $actions.show().css("top", rowPos.top-height);
   };
 
   // hide actions 
@@ -69,24 +66,21 @@
       }
     );
 
-    self.elem.find("tbody tr").hover(
-      function() {
-        var $row = $(this), 
-            $actions = $row.find(".metaDataActions");
+    self.elem.on("mouseenter", ".metaDataRow, tbody tr", function() {
+      var $row = $(this), 
+          $actions = $row.find(".metaDataActions");
 
-        if ($actions.length) {
-          self.active = true;
-          if (self.timeout) {
-            clearTimeout(self.timeout);
-          }
-          self.showActions($row);
+      if ($actions.length) {
+        self.active = true;
+        if (self.timeout) {
+          clearTimeout(self.timeout);
         }
-      }, 
-      function() {
-        self.active = false;
-        self.startTimer();
+        self.showActions($row);
       }
-    ).click(function(e) {
+    }).on("mouseleave", ".metaDataRow, tbody tr", function() {
+      self.active = false;
+      self.startTimer();
+    }).on("click", ".metaDataRow, tbody tr", function(e) {
       var $this = $(this), 
           $editAction = $this.find(".metaDataEditAction");
 
@@ -94,9 +88,9 @@
         return
       }
 
-      $this.children().effect("highlight");
+      $this.effect("highlight");
 
-      if ($(e.target).is("td")) {
+      if ($(e.target).is(".metaDataRow, td")) {
         self.elem.find("tr").removeClass("selected");
         $this.addClass("selected");
 
@@ -111,8 +105,8 @@
   // register to jquery
   $.fn[pluginName] = function (opts) { 
     return this.each(function() { 
-      if (!$.data(this, 'plugin_' + pluginName)) { 
-        $.data(this, 'plugin_' + pluginName, 
+      if (!$.data(this, pluginName)) { 
+        $.data(this, pluginName, 
           new MetaDataView(this, opts)); 
         } 
     }); 
@@ -129,4 +123,3 @@
   });
 
 })(jQuery);
-

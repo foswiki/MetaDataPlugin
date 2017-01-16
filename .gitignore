@@ -3,10 +3,10 @@
 igp_*
 pub/System/MetaDataPlugin/metadata.js
 pub/System/MetaDataPlugin/metadata.css
-MetaDataPlugin.md5
-MetaDataPlugin.sha1
-MetaDataPlugin.tgz
-MetaDataPlugin.txt
-MetaDataPlugin.zip
-MetaDataPlugin_installer
-MetaDataPlugin_installer.pl
+/MetaDataPlugin.md5
+/MetaDataPlugin.sha1
+/MetaDataPlugin.tgz
+/MetaDataPlugin.txt
+/MetaDataPlugin.zip
+/MetaDataPlugin_installer
+/MetaDataPlugin_installer.pl

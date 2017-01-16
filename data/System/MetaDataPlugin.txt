@@ -1,6 +1,6 @@
 %META:TOPICINFO{author="ProjectContributor" comment="reprev" date="1398761969" format="1.1" reprev="2" version="4"}%
 ---+!! %TOPIC%
-%SHORTDESCRIPTION%
+%FORMFIELD{"Description"}%
 
 %TOC%
 
@@ -46,7 +46,8 @@ the [[%SYSTEMWEB%.DataForms][DataForm]] definition, similar to the interface whe
 topic edit screen.
 
 | *Parameter* | *Description* | *Default* |
-| "..." | key of the !MetaData to be rendered; this name is derived from the topic name holding the !DataForm definition (see below) | |
+| "..." | key of the !MetaData type to be rendered; this name is derived from the topic name holding the !DataForm definition (see below) | |
+| name | name of one !MetaData record to be rendered; special name is =id= to render a form for a new !MetaData record to be created | |
 | action | indicates the action to perform on the records, can be =edit= or =view= | view |
 | field(s) | list of formfields to render the interface for | all known formfields of a !DataForm |
 | name | select the id of a !MetaData record to be extracted | all records attached to the given topic |
@@ -72,6 +73,7 @@ topic edit screen.
 | mandatory | string to be inserted when a field is mandatory | <span class='foswikiAlert'>**</span> |
 | hiddenformat | format string to be used to render hidden formfields | |
 | hideempty | boolean flag to hide/show empty formfields | off |
+| hidden | list of fields that are rendered hidden | |
 | warn | boolean flag to suppress error messages | on |
 | autolink | boolean flag to enable/prevent !WikiWord linking | on |
 | fieldformat | format string for a single formfield value in a row | =$value= |
@@ -181,20 +183,17 @@ have a database of efforts recorded on that tracker.
    * Foswiki:Extensions/JsonRpcContrib
 
 ---++ Installation Instructions
-
 %$INSTALL_INSTRUCTIONS%
 
----++ Info
-<!--
-   * Set SHORTDESCRIPTION = %$SHORTDESCRIPTION%
--->
+---++ Dependencies
+%$DEPENDENCIES%
 
-|  Author(s): | Michael Daum|
-|  Copyright: | &copy; 2011-2014 Michael Daum http://michaeldaumconsulting.com |
-|  License: | [[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]] |
-|  Version: | %$VERSION% |
-|  Release: | %$RELEASE% |
-|  Change History: | <!-- versions below in reverse order -->&nbsp; |
+---++ Change History
+|  16 Jan 2017: | added =showindex=, =hidden= options to =%RENDERMETADATA=; \
+                  added a "single record" mode to render one specific meta data record; \
+                  better integration with <nop>SocialFormfieldsPlugin; \
+                  fixed sorting of meta data records; \
+                  improved default markup for meta data tables |
 |  16 Dec 2014: | don't cache web.topic in plugin initializer; fixed call to CGI::param() |
 |  20 May 2014: | reworked delete; implemented save handlers for meta data; \
                   fixed table markup to pleae Foswiki:Extensions:JQDataTablesPlugin; \
@@ -228,10 +227,18 @@ have a database of efforts recorded on that tracker.
                   added dependency on Foswiki:Extensions/JsonRpcContrib; \
                   fixed row click in table editor |
 |  25 Apr 2012: | initial release | 
-|  Dependencies: | %$DEPENDENCIES% |
-|  Home page: | Foswiki:Extensions/%TOPIC% |
-|  Support: | Foswiki:Support/%TOPIC% |
+
 
 %META:FILEATTACHMENT{name="MetaDataPluginSnap1.png" attachment="MetaDataPluginSnap1.png" attr="" comment="" date="1335356137" size="27517" user="ProjectContributor" version="1"}%
 %META:FILEATTACHMENT{name="MetaDataPluginSnap2.png" attachment="MetaDataPluginSnap2.png" attr="" comment="" date="1335354029" size="18653" user="ProjectContributor" version="1"}%
 %META:FILEATTACHMENT{name="MetaDataPluginSnap3.png" attachment="MetaDataPluginSnap3.png" attr="" comment="" date="1335354684" size="33426" user="ProjectContributor" version="1"}%
+%META:FORM{name="PackageForm"}%
+%META:FIELD{name="Author" title="Author" value="Michael Daum"}%
+%META:FIELD{name="Copyright" title="Copyright" value="&copy; 2011-2017 Michael Daum http://michaeldaumconsulting.com"}%
+%META:FIELD{name="Description" title="Description" value="%25$SHORTDESCRIPTION%25"}%
+%META:FIELD{name="Home" title="Home" value="Foswiki:Extensions/%TOPIC%"}%
+%META:FIELD{name="License" title="License" value="[[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]]"}%
+%META:FIELD{name="Release" title="Release" value="%$RELEASE%"}%
+%META:FIELD{name="Repository" title="Repository" value="https://github.com/foswiki/%TOPIC%"}%
+%META:FIELD{name="Support" title="Support" value="Foswiki:Support/%TOPIC%"}%
+%META:FIELD{name="Version" title="Version" value="%$VERSION%"}%

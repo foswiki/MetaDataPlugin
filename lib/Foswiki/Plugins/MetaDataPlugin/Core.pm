@@ -1,6 +1,6 @@
 # Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# MetaDataPlugin is Copyright (C) 2011-2014 Michael Daum http://michaeldaumconsulting.com
+# MetaDataPlugin is Copyright (C) 2011-2017 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -68,9 +68,8 @@ sub init {
   Foswiki::Plugins::JQueryPlugin::createPlugin("form");
   Foswiki::Plugins::JQueryPlugin::createPlugin("jsonrpc");
 
-    #my ( $zone, $tag, $data, $requires ) = @_;
   Foswiki::Func::addToZone("script", "METADATAPLUGIN", <<'EOB', "JQUERYPLUGIN, JQUERYPLUGIN::UI::DIALOG, JQUERYPLUGIN::UI::BUTTON, JQUERYPLUGIN::JSONRPC");
-<script src='%PUBURLPATH%/%SYSTEMWEB%/MetaDataPlugin/metadata.js'></script>
+<script type='text/javascript' src='%PUBURLPATH%/%SYSTEMWEB%/MetaDataPlugin/metadata.js'></script>
 EOB
 
   Foswiki::Func::addToZone("head", "METADATAPLUGIN", <<'EOB', "JQUERYPLUGIN");
@@ -113,7 +112,7 @@ sub registerDeleteHandler {
 sub registerSaveHandler {
   my ($this, $function, $options) = @_;
 
-  #writeDebug("called registerSaveHandler()");
+  writeDebug("called registerSaveHandler()");
 
   push @{$this->{saveHandler}}, {
     function => $function,
@@ -144,6 +143,8 @@ sub NEWMETADATA {
   my $theTopic = $params->{topic} || $this->{session}{webName}.'.'.$this->{session}{topicName};
   my $theMap = $params->{map} || '';
   my $theIcon = $params->{icon} || 'add';
+  my $theIncludeAttr = $params->{includeattr} || '';
+  my $theExcludeAttr = $params->{excludeattr} || '';
 
   foreach my $map (split(/\s*,\s*/, $theMap)) {
     $map =~ s/\s*$//;
@@ -189,6 +190,8 @@ sub NEWMETADATA {
   $theFormat =~ s/%map%/$theMap/g;
   $theFormat =~ s/%values%/$theValues/g;
   $theFormat =~ s/%icon%/$theIcon/g;
+  $theFormat =~ s/%includeattr%/$theIncludeAttr/g;
+  $theFormat =~ s/%excludeattr%/$theExcludeAttr/g;
 
   #writeDebug("done NEWMETADATA()");
   
@@ -202,7 +205,7 @@ sub RENDERMETADATA {
   #writeDebug("called RENDERMETADATA()");
   $this->init();
 
-  my $metaData  = $params->{_DEFAULT};
+  my $metaData = $params->{_DEFAULT};
   my $topic = $params->{topic} || $this->{session}{topicName};
   my $web = $params->{web} || $this->{session}{webName};
   my $warn = Foswiki::Func::isTrue($params->{warn}, 1);
@@ -265,6 +268,7 @@ sub renderMetaData {
 
   my $theAction = $params->{action} || 'view';
   my $theFields = $params->{field} || $params->{fields};
+  my $theShowIndex = Foswiki::Func::isTrue($params->{showindex});
   my $theFormat = $params->{format};
   my $theHeader = $params->{header};
   my $theFooter = $params->{footer};
@@ -287,6 +291,7 @@ sub renderMetaData {
   my $theFieldHeader = $params->{fieldheader} || '';
   my $theFieldFooter = $params->{fieldfooter} || '';
   my $theFieldSep = $params->{fieldseparator} || '';
+  my $theHidden = $params->{hidden} || '';
 
   foreach my $map (split(/\s*,\s*/, $theMap)) {
     $map =~ s/\s*$//;
@@ -346,7 +351,7 @@ sub renderMetaData {
 
 
   $theMandatory = " <span class='foswikiAlert'>**</span> " unless defined $theMandatory;
-  $theHiddenFormat = '<input type="hidden" name="$name" value="$value" />' unless defined $theHiddenFormat; 
+  $theHiddenFormat = '<input type="hidden" name="$metaname" value="$origvalue" />' unless defined $theHiddenFormat; 
 
   $theSort = 'name' unless defined $theSort;
   $theSort = '' if $theSort eq 'off';
@@ -424,6 +429,15 @@ sub renderMetaData {
       push @selectedFields, $field if $field;
     }
   } else {
+    if ($theShowIndex) {
+      my $indexField = new Foswiki::Form::Label(
+        session    => $this->{session},
+        name       => 'index',
+        title      => '#',
+        description => '',
+      );
+      push @selectedFields, $indexField;
+    }
     my $nameField = new Foswiki::Form::Label(
         session    => $this->{session},
         name       => 'name',
@@ -433,20 +447,29 @@ sub renderMetaData {
     );
     push @selectedFields, $nameField;
     foreach my $field (@{$formDef->getFields()}) {
-      next if $field->{attributes} =~ /h/i;
+      my $fieldAttrs = $field->{attributes};
+      next if $fieldAttrs =~ /h/i;
+      next if $theIncludeAttr && $fieldAttrs !~ /^($theIncludeAttr)$/;
+      next if $theExcludeAttr && $fieldAttrs =~ /^($theExcludeAttr)$/;
       push @selectedFields, $field;
     }
   }
 
+  my $name = $params->{name};
+
   # default formats
   unless (defined $theHeader) {
     if ($theAction eq 'view') {
-      $theHeader = '<div class=\'metaDataView '.($params->{_gotWriteAccess}?'':'metaDataReadOnly').'\'>$n<table class="foswikiTable"><thead><tr><th>$n'.join(' </th><th>$n', 
-        map {
-          my $title = $_->{title}; defined($params->{$title.'_title'})?$params->{$title.'_title'}:$title
-        } 
-        grep {$_->{name} ne 'name'}
-        @selectedFields).' </th></tr></thead><tbody>$n';
+      if (defined $name) { # single mode
+        $theHeader = '<div class=\'foswikiPageForm\'>$n<table class=\'foswikiLayoutTable\'><tbody>$n';
+      } else {
+        $theHeader = '<div class=\'metaDataView'.($params->{_gotWriteAccess}?'':' metaDataReadOnly').'\'>$n<table class="foswikiTable"><thead><tr><th>$n'.join(' </th><th>$n', 
+          map {
+            my $title = $_->{title}; defined($params->{$title.'_title'})?$params->{$title.'_title'}:$title
+          } 
+          grep {$_->{name} ne 'name'}
+          @selectedFields).' </th></tr></thead><tbody>$n';
+      }
     } else {
       $theHeader = '<div class=\'metaDataEdit foswikiFormSteps\'>$n';
     }
@@ -454,12 +477,21 @@ sub renderMetaData {
 
   unless (defined $theFormat) {
     if ($theAction eq 'view') {
-      $theFormat = '<tr><td>$n'.join(' </td><td>$n', 
-        map {
-          '$'.$_->{name}
-        } 
-        grep {$_->{name} ne 'name'}
-        @selectedFields).' '.($params->{_gotWriteAccess}?'$actions':'').' </td></tr>$n';
+      if (defined $name) { # single mode
+        $theFormat = join('', 
+          map {
+            '$'.$_->{name}
+          } 
+          grep {$_->{name} ne 'name'}
+          @selectedFields);
+      } else {
+        $theFormat = '<tr class=\'metaDataRow\'><td>$n'.join(' </td><td>$n', 
+          map {
+            '$'.$_->{name}
+          } 
+          grep {$_->{name} ne 'name'}
+          @selectedFields).' '.($params->{_gotWriteAccess}?'$actions':'').' </td></tr>$n';
+      }
     } else {
       $theFormat = '<div class=\'foswikiFormStep $metadata\'>$n<table class=\'foswikiLayoutTable\'>$n'.
         join('$n', map {'$'.$_->{name}} @selectedFields).
@@ -469,7 +501,11 @@ sub renderMetaData {
 
   unless (defined $theFieldFormat) {
     if ($theAction eq 'view') {
-      $theFieldFormat = '$value';
+      if (defined $name) { # single mode
+        $theFieldFormat = '<tr><th valign=\'top\'>$title:</th><td>$value</td></tr>';
+      } else {
+        $theFieldFormat = '$value';
+      }
     } else {
       $theFieldFormat = '  <tr class="$metadata $name">$n'.
         '    <th valign=\'top\'>$title:$mandatory</th>$n'.
@@ -480,7 +516,11 @@ sub renderMetaData {
 
   unless (defined $theFooter) {
     if ($theAction eq 'view') {
-      $theFooter = '</tbody></table></div>';
+      if (defined $name) { # single mode
+        $theFooter = '</tbody></table></div>';
+      } else {
+        $theFooter = '</tbody></table></div>';
+      }
     } else {
       $theFooter = '</div>';
     }
@@ -495,7 +535,6 @@ sub renderMetaData {
   }
 
   my @result = ();
-  my $name = $params->{name};
   my @metaDataRecords;
   if (defined $name) {
     my $record;
@@ -512,9 +551,31 @@ sub renderMetaData {
     push @metaDataRecords, $topicObj->find($metaDataKey);
   }
 
+  # build mapping
+  $this->{_mapping} = ();
+  if ($theAction ne 'edit' && Foswiki::Func::getContext()->{SocialFormfieldsPluginEnabled}) {
+    require Foswiki::Plugins::SocialFormfieldsPlugin;
+    my $socialCore = Foswiki::Plugins::SocialFormfieldsPlugin::getCore();
+
+    foreach my $record (@metaDataRecords) {
+      foreach my $field (@selectedFields) {
+        next unless $field;
+        my $fieldName = $field->{name};
+        next if $fieldName eq 'index';
+        my $fieldValue = $record->{$fieldName};
+        if ($fieldValue =~ /^social\-(.*)$/) {
+          my ($intVal) = $socialCore->getAverageVote($1);
+          my $val = $socialCore->convertIntToVal(undef, $field, $intVal); 
+          $this->{_mapping}{$fieldValue} = $val;
+        }
+      }
+    }
+  }
+
   # sort and reverse
-  sortRecords(\@metaDataRecords, $theSort) if $theSort;
+  $this->sortRecords(\@metaDataRecords, $theSort, $topicObj) if $theSort;
   @metaDataRecords = reverse @metaDataRecords if $theReverse;
+
 
   # loop over all meta data records
   my $index = 1;
@@ -540,9 +601,9 @@ sub renderMetaData {
       my $fieldDefiningTopic = $field->{definingTopic};
       my $fieldFormat = $theFieldFormat;
 
-      my $origFieldName = $field->{name};
+      my $metaFieldName = 'META:'.$metaDataKey.':'.$name.':'.$fieldName; 
       if ($theAction eq 'edit') {
-        $field->{name} = 'META:'.$metaDataKey.':'.$name.':'.$fieldName;
+        $field->{name} = $metaFieldName; 
       }
 
       my $fieldAllowedValues = '';
@@ -594,7 +655,7 @@ sub renderMetaData {
       if ($fieldName eq 'index') {
         $fieldValue = $index;
       } else {
-        $fieldValue = $record->{$fieldName};
+        $fieldValue = $this->getFieldValue($record, $fieldName);
       }
 
       # try not to break foswiki tables
@@ -613,7 +674,9 @@ sub renderMetaData {
       $fieldFormat = $params->{$fieldName.'_format'} if defined $params->{$fieldName.'_format'};
       $fieldDefault = $params->{$fieldName.'_default'} if defined $params->{$fieldName.'_default'};
 
-      my $fieldIsHidden = Foswiki::Func::isTrue($params->{$fieldName.'_hidden'}, 0);
+      my $fieldIsHidden = ($fieldAttrs=~ /h/i || $theHidden && $fieldName =~ /^($theHidden)$/) ? 1 : 0;
+      $fieldIsHidden = Foswiki::Func::isTrue($params->{$fieldName.'_hidden'}, 0) if defined $params->{$fieldName.'_hidden'};
+
       my $fieldMandatory = $field->isMandatory?$theMandatory:'';
 
       if ($theAction eq 'edit') { # or get value from url (highest prio)
@@ -632,8 +695,10 @@ sub renderMetaData {
       my $fieldSort = Foswiki::Func::isTrue($params->{$fieldName.'_sort'});
 #      $fieldAllowedValues = sortValues($fieldAllowedValues, $fieldSort) if $fieldSort;
 
-      next if $theIncludeAttr && $fieldAttrs !~ /^($theIncludeAttr)$/;
-      next if $theExcludeAttr && $fieldAttrs =~ /^($theExcludeAttr)$/;
+      if ($fieldName ne 'name') {
+        next if $theIncludeAttr && $fieldAttrs !~ /^($theIncludeAttr)$/;
+        next if $theExcludeAttr && $fieldAttrs =~ /^($theExcludeAttr)$/;
+      }
 
       $fieldValue = $fieldDefault unless defined $fieldValue;
       $fieldDescription = '' unless defined $fieldDescription;
@@ -676,9 +741,7 @@ sub renderMetaData {
       # - patch in (display) value as $value
       # - use raw value as $origvalue
       my $origValue = $fieldValue;
-      if ($field->can('getDisplayValue')) { 
-        $fieldValue = $field->getDisplayValue($fieldValue);
-      }
+      $line =~ s/\$value([^\(]|$)/\$value(display)\0$1/g;
 
       my $fieldExtra = '';
       my $fieldEdit = '';
@@ -702,11 +765,11 @@ sub renderMetaData {
             display=>1
           }); # SMELL what about the attrs param in Foswiki::Form; wtf is this attr anyway
         }
-
-        $fieldEdit =~ s/\0//g;
-        $fieldValue =~ s/\0//g;
-
       }
+
+      $fieldEdit =~ s/\0//g;
+      $fieldValue =~ s/\0//g;
+      $line =~ s/\0//g;
 
       # escape %VARIABLES inside input values
       $fieldEdit =~ s/(<input.*?value=["'])(.*?)(["'])/
@@ -716,10 +779,18 @@ sub renderMetaData {
         $tmp =~ s#%#%<nop>#g;
         $pre.$tmp.$post;
       /ge;
+      $fieldEdit =~ s/(<textarea[^>]*>)(.*?)(<\/textarea>)/
+        my $pre = $1;
+        my $tmp = $2;
+        my $post = $3;
+        $tmp =~ s#%#%<nop>#g;
+        $pre.$tmp.$post;
+      /gmes;
 
       $line =~ s/\$mandatory/$fieldMandatory/g;
       $line =~ s/\$edit\b/$fieldEdit/g;
       $line =~ s/\$name\b/$fieldName/g;
+      $line =~ s/\$metaname\b/$metaFieldName/g;
       $line =~ s/\$type\b/$fieldType/g;
       $line =~ s/\$size\b/$fieldSize/g;
       $line =~ s/\$attrs\b/$fieldAttrs/g;
@@ -728,6 +799,7 @@ sub renderMetaData {
       $line =~ s/\$title\b/$fieldTitle/g;
       $line =~ s/\$extra\b/$fieldExtra/g;
       $line =~ s/\$origvalue\b/$origValue/g;
+      $line =~ s/\$formatTime\((.*?)(?:,\s*'([^']*?)')?\)/Foswiki::Time::formatTime($1, $2)/ge;
 
       $title = $fieldValue if $fieldName =~ /^(Topic)?Title/i;
 
@@ -738,7 +810,7 @@ sub renderMetaData {
 
       # cleanup
       $fieldClone->finish() if defined $fieldClone;
-      $field->{name} = $origFieldName;
+      $field->{name} = $fieldName;
     }
     
     #writeDebug("row=$row");
@@ -748,12 +820,12 @@ sub renderMetaData {
     my $fieldActions = '';
 
     if ($params->{_gotWriteAccess}) {
-      my $fieldEditAction = Foswiki::Func::expandTemplate("metadata::edit");
-      my $fieldDeleteAction = Foswiki::Func::expandTemplate("metadata::delete");
-      my $fieldDuplicateAction = Foswiki::Func::expandTemplate("metadata::duplicate");
-      $fieldDuplicateAction = ''; # TODO: disabled
+      $fieldActions = Foswiki::Func::expandTemplate("metadata::actions");
 
-      $fieldActions = '<span class="metaDataActions">'.$fieldEditAction.$fieldDuplicateAction.$fieldDeleteAction.'</div>';
+      my $fieldEditAction = Foswiki::Func::expandTemplate("metadata::action::edit");
+      my $fieldDeleteAction = Foswiki::Func::expandTemplate("metadata::action::delete");
+      my $fieldDuplicateAction = Foswiki::Func::expandTemplate("metadata::action::duplicate");
+      my $fieldMoveAction = Foswiki::Func::expandTemplate("metadata::action::move");
 
       my $topic = $topicObj->getPath;
       if (defined $params->{edittitle}) {
@@ -761,6 +833,11 @@ sub renderMetaData {
       } else {
         $title = '%MAKETEXT{"Edit"}% '.$title;
       }
+
+      $fieldActions =~ s/\%edit\%/$fieldEditAction/g;
+      $fieldActions =~ s/\%duplicate\%/$fieldDuplicateAction/g;
+      $fieldActions =~ s/\%delete\%/$fieldDeleteAction/g;
+      $fieldActions =~ s/\%move\%/$fieldMoveAction/g;
 
       $fieldActions =~ s/\%title\%/$title/g;
       $fieldActions =~ s/\%name\%/$name/g;
@@ -774,6 +851,7 @@ sub renderMetaData {
 
     $row =~ s/\$actions\b/$fieldActions/g;
     $row =~ s/\$index\b/$index/g;
+    $row =~ s/\$id\b/$name/g;
     $row =~ s/\$fields\b/$fieldResult/g;
 
     push @result, $row;
@@ -784,10 +862,13 @@ sub renderMetaData {
 
   my $result = $theHeader.join($theSep, @result).$theFooter;
 
+  my $formTitle = _getTopicTitle($formWeb, $formTopic);
+
   $index--;
   $result =~ s/\$count/$index/g;
   $result =~ s/\$metadata\b/$metaData/g; # the meta data name
-  $result =~ s/\$form\b/$formWeb.$formTopic/g; # the meta data name
+  $result =~ s/\$form\b/$formWeb.$formTopic/g; # the meta data definition
+  $result =~ s/\$formtitle\b/$formTitle/g; # the meta data definition title
   $result =~ s/\$nop//g;
   $result =~ s/\$n/\n/g;
   $result =~ s/\$perce?nt/%/g;
@@ -1089,33 +1170,32 @@ sub inlineError {
 
 ##############################################################################
 sub sortRecords {
-  my ($records, $crit) = @_;
+  my ($this, $records, $crit, $meta) = @_;
 
   my $isNumeric = 1;
   my $isDate = 1;
   my %sortCrits = ();
   foreach my $rec (@$records) {
-    my $item = $rec->{$crit};
-    next unless defined $item;
+    my $val = $this->getFieldValue($rec, $crit, $meta);
+    next unless defined $val;
 
-    $item =~ s/\s*$//;
-    $item =~ s/^\s*//;
+    $val =~ s/^\s*|\s*$//g;
 
-    if ($isNumeric && $item !~ /^(\s*[+-]?\d+(\.?\d+)?\s*)$/) {
+    if ($isNumeric && $val !~ /^(\s*[+-]?\d+(\.?\d+)?\s*)$/) {
       $isNumeric = 0;
     }
 
-    if ($isDate && ! defined Foswiki::Time::parseTime($item)) {
+    if ($isDate && ! defined Foswiki::Time::parseTime($val)) {
       $isDate = 0;
     }
 
-    $sortCrits{$rec->{name}} = $item;
+    $sortCrits{$rec->{name}} = $val;
   }
 
   if ($isDate) {
     # convert to epoch seconds if we sort per date
-    foreach my $item (keys %sortCrits) {
-      $sortCrits{$item} = Foswiki::Time::parseTime($sortCrits{$item});
+    foreach my $key (keys %sortCrits) {
+      $sortCrits{$key} = Foswiki::Time::parseTime($sortCrits{$key});
     }
     $isNumeric = 1;
   }
@@ -1128,5 +1208,54 @@ sub sortRecords {
     @{$records} = sort {lc($sortCrits{$a->{name}}||'') cmp lc($sortCrits{$b->{name}}||'')} @$records;
   }
 }
+
+##############################################################################
+sub getFieldValue {
+  my ($this, $record, $crit, $meta) = @_;
+
+  my $fieldValue = $record->{$crit};
+  unless (defined $fieldValue) {
+    return unless $meta;
+    $fieldValue = Foswiki::Func::decodeFormatTokens($crit);
+    $fieldValue =~ s/%id%/$record->{name}/g;
+    $fieldValue = Foswiki::Func::expandCommonVariables($fieldValue, $meta->topic, $meta->web, $meta);
+  }
+
+  my $mappedValue = $this->{_mapping}{$fieldValue};
+  return $mappedValue if defined $mappedValue;
+  return $fieldValue;
+}
+
+##############################################################################
+sub _getTopicTitle {
+  my ($web, $topic, $meta) = @_;
+
+  ($meta) = Foswiki::Func::readTopic($web, $topic) unless defined $meta;
+
+  # read the formfield value
+  my $title = $meta->get('FIELD', 'TopicTitle');
+  $title = $title->{value} if $title;
+
+  # read the topic preference
+  unless ($title) {
+    $title = $meta->get('PREFERENCE', 'TOPICTITLE');
+    $title = $title->{value} if $title;
+  }
+
+  # read the preference
+  unless ($title)  {
+    Foswiki::Func::pushTopicContext($web, $topic);
+    $title = Foswiki::Func::getPreferencesValue('TOPICTITLE');
+    Foswiki::Func::popTopicContext();
+  }
+
+  # default to topic name
+  $title ||= $topic;
+
+  $title =~ s/\s*$//;
+  $title =~ s/^\s*//;
+
+  return $title;
+} 
 
 1;

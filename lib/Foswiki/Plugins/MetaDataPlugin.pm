@@ -1,6 +1,6 @@
 # Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# MetaDataPlugin is Copyright (C) 2011-2014 Michael Daum http://michaeldaumconsulting.com
+# MetaDataPlugin is Copyright (C) 2011-2017 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -35,8 +35,8 @@ BEGIN {
   }
 }
 
-our $VERSION = '4.10';
-our $RELEASE = '4.10';
+our $VERSION = '5.00';
+our $RELEASE = '16 Jan 2017';
 our $SHORTDESCRIPTION = 'Bring custom meta data to wiki apps';
 our $NO_PREFS_IN_TOPIC = 1;
 our $core;
@@ -75,11 +75,6 @@ sub initPlugin {
 #  Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "save", sub {
 #     my $session = shift;
 #    return $core->jsonRpcSave(@_);
-#  });
-
-#  Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "update", sub {
-#     my $session = shift;
-#    return $core->jsonRpcUpdate(@_);
 #  });
 
   Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "delete", sub {
