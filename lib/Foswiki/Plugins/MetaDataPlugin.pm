@@ -1,6 +1,6 @@
 # Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# MetaDataPlugin is Copyright (C) 2011-2017 Michael Daum http://michaeldaumconsulting.com
+# MetaDataPlugin is Copyright (C) 2011-2019 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -35,8 +35,8 @@ BEGIN {
   }
 }
 
-our $VERSION = '5.00';
-our $RELEASE = '16 Jan 2017';
+our $VERSION = '6.00';
+our $RELEASE = '30 Jan 2019';
 our $SHORTDESCRIPTION = 'Bring custom meta data to wiki apps';
 our $NO_PREFS_IN_TOPIC = 1;
 our $core;
@@ -49,7 +49,6 @@ sub earlyInitPlugin {
 
   return 0;
 }
-
 
 ##############################################################################
 sub initPlugin {
@@ -65,6 +64,7 @@ sub initPlugin {
   });
 
   # register meta definitions
+  # SMELL: can't register meta data by now as some plugins aren't initialized yet
   registerMetaData();
 
 #  Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "get", sub {
@@ -91,6 +91,13 @@ sub initPlugin {
     my $session = shift;
     return $core->jsonRpcUnlockTopic(@_);
   });
+
+  if ($Foswiki::cfg{Plugins}{SolrPlugin} && $Foswiki::cfg{Plugins}{SolrPlugin}{Enabled}) {
+    require Foswiki::Plugins::SolrPlugin;
+    Foswiki::Plugins::SolrPlugin::registerIndexTopicHandler(sub {
+      return $core->solrIndexTopicHandler(@_);
+    });
+  }
 
   return 1;
 }
@@ -121,9 +128,13 @@ sub registerMetaData {
 
   my $session = $Foswiki::Plugins::SESSION;
   my $baseWeb = $session->{webName};
+  my $baseTopic = $session->{topicName};
 
   $topics = Foswiki::Func::getPreferencesValue("WEBMETADATA") || ''
     unless defined $topics;
+
+  $topics =~ s/%TOPIC%/$baseTopic/g;
+  $topics =~ s/%WEB%/$baseWeb/g;
 
   foreach my $item (split(/\s*,\s*/, $topics)) {
     my ($web, $topic) = Foswiki::Func::normalizeWebTopicName($baseWeb, $item);

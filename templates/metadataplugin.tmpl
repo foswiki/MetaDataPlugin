@@ -1,12 +1,12 @@
 %TMPL:DEF{"metadata::actions"}%<span class="metaDataActions foswikiNormal jqUITooltip" data-theme="info" data-arrow="on" data-position="top">%edit%%delete%</span>%TMPL:END%
 
-%TMPL:DEF{"metadata::action::edit"}%<a href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::editor&metadata=%meta%&metadata::name=%name%&metadata::title=%title%&map=%ENCODE{"%map%"}%&querystring=%ENCODE{"%QUERYSTRING%"}%&t=%GMTIME{"$epoch"}%" class="jqUIDialogLink metaDataEditAction" title="%MAKETEXT{"Edit"}%">%JQICON{"fa-pencil"}%</a>%TMPL:END%
-%TMPL:DEF{"metadata::action::duplicate"}%<a href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::duplicator&metadata=%meta%&metadata::name=%name%&metadata::title=%title%&querystring=%ENCODE{"%QUERYSTRING%"}%&t=%GMTIME{"$epoch"}%" class="jqUIDialogLink metaDataDuplicateAction" title="%MAKETEXT{"Duplicate"}%">%JQICON{"page_white_copy"}%</a>%TMPL:END%
-%TMPL:DEF{"metadata::action::move"}%<a href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::move&metadata=%meta%&metadata::name=%name%&metadata::title=%title%&querystring=%ENCODE{"%QUERYSTRING%"}%&t=%GMTIME{"$epoch"}%" class="jqUIDialogLink metaDataDuplicateAction" title="%MAKETEXT{"Move"}%">%JQICON{"fa-arrows"}%</a>%TMPL:END%
-%TMPL:DEF{"metadata::action::delete"}%<a href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::confirmdelete&metadata=%meta%&metadata::name=%name%&metadata::title=%title%&querystring=%ENCODE{"%QUERYSTRING%"}%&t=%GMTIME{"$epoch"}%" class="jqUIDialogLink metaDataDeleteAction" title="%MAKETEXT{"Delete"}%">%JQICON{"fa-trash"}%</a>%TMPL:END%
-%TMPL:DEF{"DISmetadata::action::new"}%<a href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::editor&metadata=%meta%&metadata::title=%title%&map=%ENCODE{"%map%"}%&querystring=%ENCODE{"%QUERYSTRING%"}%&t=%GMTIME{"$epoch"}%" class="jqUIButton jqUIDialogLink metaDataNewAction" data-icon="%icon%">%buttontitle%</a>%TMPL:END%
-%TMPL:DEF{"DISmetadata::new"}%<a href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::editor&metadata=%meta%&metadata::title=%title%&map=%ENCODE{"%map%"}%&querystring=%ENCODE{"%QUERYSTRING%"}%&t=%GMTIME{"$epoch"}%" class="jqUIButton jqUIDialogLink metaDataNewAction" data-icon="%icon%">%buttontitle%</a>%TMPL:END%
-%TMPL:DEF{"metadata::new"}%%BUTTON{"%buttontitle%" icon="%icon%" href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::editor&metadata=%meta%&metadata::title=%title%&includeattr=%includeattr%&excludeattr=%excludeattr%&map=%ENCODE{"%map%"}%&querystring=%ENCODE{"%QUERYSTRING%"}%&%values%&t=%GMTIME{"$epoch"}%" class="jqUIDialogLink metaDataNewAction"}%%TMPL:END%
+%TMPL:DEF{"metadata::action::edit"}%<a href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::editor&metadata=%meta%&metadata::name=%name%&metadata::title=%ENCODE{"%title%"}%&includeattr=%includeattr%&excludeattr=%excludeattr%&map=%ENCODE{"%map%"}%&anchor=%anchor%&navigation=%navigation%&querystring=%ENCODE{"%QUERYSTRING%"}%&t=%GMTIME{"$epoch"}%" class="jqUIDialogLink metaDataEditAction" id="%id%" title="%MAKETEXT{"Edit"}%">%JQICON{"fa-pencil"}%</a>%TMPL:END%
+%TMPL:DEF{"metadata::action::duplicate"}%<a href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::duplicator&metadata=%meta%&metadata::name=%name%&metadata::title=%ENCODE{"%title%"}%&anchor=%anchor%&querystring=%ENCODE{"%QUERYSTRING%"}%&t=%GMTIME{"$epoch"}%" class="jqUIDialogLink metaDataDuplicateAction" id="%id%" title="%MAKETEXT{"Duplicate"}%">%JQICON{"page_white_copy"}%</a>%TMPL:END%
+%TMPL:DEF{"metadata::action::move"}%<a href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::move&metadata=%meta%&metadata::name=%name%&metadata::title=%ENCODE{"%title%"}%&anchor=%anchor%&querystring=%ENCODE{"%QUERYSTRING%"}%&t=%GMTIME{"$epoch"}%" class="jqUIDialogLink metaDataDuplicateAction" id="%id%" title="%MAKETEXT{"Move"}%">%JQICON{"fa-arrows"}%</a>%TMPL:END%
+%TMPL:DEF{"metadata::action::delete"}%<a href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::confirmdelete&metadata=%meta%&metadata::name=%name%&metadata::title=%ENCODE{"%title%"}%&anchor=%anchor%&querystring=%ENCODE{"%QUERYSTRING%"}%&t=%GMTIME{"$epoch"}%" class="jqUIDialogLink metaDataDeleteAction" id="%id%" title="%MAKETEXT{"Delete"}%">%JQICON{"fa-trash"}%</a>%TMPL:END%
+%TMPL:DEF{"DISmetadata::action::new"}%<a href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::editor&metadata=%meta%&metadata::title=%ENCODE{"%title%"}%&map=%ENCODE{"%map%"}%&anchor=%anchor%&querystring=%ENCODE{"%QUERYSTRING%"}%&t=%GMTIME{"$epoch"}%" class="jqUIButton jqUIDialogLink metaDataNewAction" data-icon="%icon%">%buttontitle%</a>%TMPL:END%
+%TMPL:DEF{"DISmetadata::new"}%<a href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::editor&metadata=%meta%&metadata::title=%ENCODE{"%title%"}%&map=%ENCODE{"%map%"}%&anchor=%anchor%&querystring=%ENCODE{"%QUERYSTRING%"}%&t=%GMTIME{"$epoch"}%" class="jqUIButton jqUIDialogLink metaDataNewAction" data-icon="%icon%">%buttontitle%</a>%TMPL:END%
+%TMPL:DEF{"metadata::new"}%%BUTTON{"%buttontitle%" icon="%icon%" href="%SCRIPTURLPATH{"rest"}%/RenderPlugin/template?topic=%topic%&name=metadataplugin&expand=metadata::editor&metadata=%meta%&metadata::title=%ENCODE{"%title%"}%&includeattr=%includeattr%&excludeattr=%excludeattr%&map=%ENCODE{"%map%"}%&anchor=%anchor%&querystring=%ENCODE{"%QUERYSTRING%"}%&%values%&t=%GMTIME{"$epoch"}%" class="jqUIDialogLink metaDataNewAction"}%%TMPL:END%
 
 %TMPL:DEF{"metadata::editor"}%%IF{
   "%RENDERMETADATA{"%URLPARAM{"metadata"}%" header="$islocked" footer="" format=""}%"
@@ -14,7 +14,7 @@
   else="$percntTMPL:P{\"metadata::editor::impl\" includeattr=\"\"}$percnt"
 }%%TMPL:END%
 
-%TMPL:DEF{"metadata::locked"}%<!-- -->
+%TMPL:DEF{"metadata::locked"}%%{}%
 <literal>
 <script>
 jQuery(function($) {
@@ -34,12 +34,13 @@ jQuery(function($) {
 });
 </script>
 </literal>
-<!-- -->%TMPL:END%
+%{}%%TMPL:END%
 
-%TMPL:DEF{"metadata::editor::impl"}%<!-- -->
-<div title="%URLPARAM{"metadata::title" default="%MAKETEXT{"Edit"}% %URLPARAM{"metadata"}%" }%" class="metaDataEditDialog jqUIDialog" data-modal="true" data-resizable="true" data-draggable="true" data-width="%URLPARAM{"width" default="auto"}%">
-  <form class='jqValidate' id='metaDataForm' action='%SCRIPTURL{"save"}%/%WEB%/%TOPIC%' method='post'>
-  <input type="hidden" name="redirectto" value="%SCRIPTURL{"view"}%/%WEB%/%TOPIC%%IF{"$'URLPARAM{querystring}'!=''" then="?%URLPARAM{"querystring"}%"}%" />
+%TMPL:DEF{"metadata::editor::impl"}%%{}%
+<div title="%URLPARAM{"metadata::title" default="%MAKETEXT{"Edit"}% %URLPARAM{"metadata"}%" }%" class="metaDataEditDialog jqUIDialog" data-show="undefined" data-modal="true" data-resizable="true" data-draggable="true" data-width="%URLPARAM{"width" default="auto"}%">
+  <form class='jqValidate' id='metaDataForm' action='%SCRIPTURL{"rest"}%/NatEditPlugin/save' method='post'>
+  <input type="hidden" name="topic" value="%WEB%.%TOPIC%" />
+  <input type="hidden" name="redirectto" value="%SCRIPTURL{"view"}%/%WEB%/%TOPIC%%IF{"$'URLPARAM{querystring}'!=''" then="?%URLPARAM{"querystring"}%"}%#%URLPARAM{"anchor"}%" />
   %RENDERMETADATA{
     "%URLPARAM{"metadata"}%" 
     action="edit"
@@ -50,40 +51,23 @@ jQuery(function($) {
     map="%URLPARAM{"map"}%"
   }%
   <a class="jqUIDialogButton jqUIDialogSubmit" data-icon="ui-icon-disk">%MAKETEXT{"Save"}%</a>
-  <a class="jqUIDialogButton jqUIDialogClose" data-icon="ui-icon-cancel">%MAKETEXT{"Cancel"}%</a>
-  </form>
+  <a class="jqUIDialogButton jqUIDialogDestroy" data-icon="ui-icon-cancel">%MAKETEXT{"Cancel"}%</a>
+%IF{"'%URLPARAM{"navigation"}%'!='off'"
+  then="$percntTMPL:P{\"metadata::editor::navigation\"}$percnt"
+}%</form>
 </div>
-<literal>
-<script>
-jQuery(function($) {
-  $.validator.addClassRules("foswikiMandatory", {
-    required: true
-  });
-  $(".metaDataEditDialog").bind("dialogclose", function() {
-    var $this = $(this);
-    $.jsonRpc(foswiki.getPreference("SCRIPTURL")+"/jsonrpc", {
-      namespace: "MetaDataPlugin",
-      method: "unlock",
-      params: {
-        "topic": "%WEB%.%TOPIC%"
-      },
-      success: function() {
-        //alert("done");
-      },
-      error: function(json, textStatus, xhr) {
-        alert(json.error.message);
-      }
-    });
-  });
-});
-</script>
-<!-- -->%TMPL:END%
+%{}%%TMPL:END%
+
+%TMPL:DEF{"metadata::editor::navigation"}%%{}%
+<a class="jqUIDialogButton metaDataPrev" %IF{"'%URLPARAM{"metadata::prev"}%'=''" then="data-disabled='true'"}% data-selector="%URLPARAM{"metadata::prev"}%" data-icon="ui-icon-circle-triangle-w">%MAKETEXT{"Previous"}%</a>
+<a class="jqUIDialogButton metaDataNext" %IF{"'%URLPARAM{"metadata::next"}%'=''" then="data-disabled='true'"}% data-selector="%URLPARAM{"metadata::next"}%" data-icon="ui-icon-circle-triangle-e">%MAKETEXT{"Next"}%</a>
+%{}%%TMPL:END%
 
 %TMPL:DEF{"metadata::editor::params"}%
     TopicTitle_title="%MAKETEXT{"Title"}%"
 %TMPL:END%
 
-%TMPL:DEF{"metadata::duplicator"}%<!-- -->
+%TMPL:DEF{"metadata::duplicator"}%%{}%
 <div title="%URLPARAM{"metadata::title" default="%MAKETEXT{"Duplicate"}% %URLPARAM{"metadata"}%" }%" class="jqUIDialog" data-modal="true" data-resizable="true" data-draggable="true" data-width="710">
   <form id='metaDataForm' action='%SCRIPTURLPATH{"save"}%/%WEB%/%TOPIC%' method='post'>
   %RENDERMETADATA{
@@ -98,11 +82,11 @@ jQuery(function($) {
   <a class="jqUIDialogButton jqUIDialogClose" data-icon="ui-icon-cancel">%MAKETEXT{"Cancel"}%</a>
   </form>
 </div>
-<!-- -->%TMPL:END%
+%{}%%TMPL:END%
 
 %TMPL:DEF{"metadata::duplicator::params"}%%TMPL:P{"metadata::editor::params"}%%TMPL:END%
 
-%TMPL:DEF{"metadata::move"}%<!-- -->
+%TMPL:DEF{"metadata::move"}%%{}%
 <div title="%URLPARAM{"metadata::title" default="%MAKETEXT{"Move"}% %URLPARAM{"metadata"}%" }%" class="jqUIDialog" data-modal="true" data-resizable="true" data-draggable="true" data-width="710">
   <form id='metaDataForm' action='%SCRIPTURLPATH{"save"}%' method='post'>
     <input type="text" name="topic" value="%BASEWEB%.%BASETOPIC%" size="80" />
@@ -121,7 +105,7 @@ jQuery(function($) {
   <a class="jqUIDialogButton jqUIDialogClose" data-icon="ui-icon-cancel">%MAKETEXT{"Cancel"}%</a>
   </form>
 </div>
-<!-- -->%TMPL:END%
+%{}%%TMPL:END%
 
 %TMPL:DEF{"metadata::move::params"}%%TMPL:P{"metadata::editor::params"}%%TMPL:END%
 
@@ -131,11 +115,11 @@ jQuery(function($) {
   else="$percntTMPL:P{\"metadata::confirmdelete::impl\"}$percnt"
 }%%TMPL:END%
 
-%TMPL:DEF{"metadata::confirmdelete::impl"}%<!-- -->
-<div title="%MAKETEXT{"Confirmation required"}%" class="metaDataDeleteDialog jqUIDialog" data-modal="true" data-draggable="true" data-width="280">
+%TMPL:DEF{"metadata::confirmdelete::impl"}%%{}%
+<div title="%MAKETEXT{"Confirmation required"}%" class="metaDataDeleteDialog jqUIDialog" data-modal="true" data-draggable="true" data-width="300">
 <img src="%PUBURLPATH%/%SYSTEMWEB%/MetaDataPlugin/trash.png" width="48" height="48" align="right" />
 %MAKETEXT{"Are you sure that you want to delete this record?"}%
-%TMPL:P{"metadata::confirmdelete::details"}%<!-- -->
+%TMPL:P{"metadata::confirmdelete::details"}%%{}%
 <form class="metaDataDeleteForm" action="%SCRIPTURLPATH{"jsonrpc"}%/MetaDataPlugin/delete" method="post">
 <input type="hidden" name="topic" value="%WEB%.%TOPIC%" />
 <input type="hidden" name="metadata" value="%URLPARAM{"metadata"}%" />
@@ -149,7 +133,7 @@ jQuery(function($) {
 jQuery(function($) {
   $(".metaDataDeleteForm").ajaxForm({
     success: function() {
-      window.location.href = '%SCRIPTURL{"view"}%/%WEB%/%TOPIC%%IF{"$'URLPARAM{querystring}'!=''" then="?%URLPARAM{"querystring"}%"}%';
+      window.location.reload(); /* = '%SCRIPTURL{"view"}%/%WEB%/%TOPIC%%IF{"$'URLPARAM{querystring}'!=''" then="?%URLPARAM{"querystring"}%"}%';*/
     },
     error: function(xhr, status, error) {
       $(".metaDataDeleteDialog").dialog("close");
@@ -168,8 +152,8 @@ jQuery(function($) {
 });
 </script>
 </literal>
-<!-- -->%TMPL:END%
+%{}%%TMPL:END%
 
-%TMPL:DEF{"DISmetadata::confirmdelete::details"}%<!-- -->
+%TMPL:DEF{"DISmetadata::confirmdelete::details"}%%{}%
 <p class="foswikiCenter"><b>%URLPARAM{"metadata::name" default="%name%"}%</b></p>
-<!-- -->%TMPL:END%
+%{}%%TMPL:END%

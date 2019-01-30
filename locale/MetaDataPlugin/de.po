@@ -1,0 +1,148 @@
+# Foswiki translation for Deutsch
+# Translators:
+# Foswiki:Main/MichaelDaum
+msgid ""
+msgstr ""
+"Project-Id-Version: Foswiki $Id\n"
+"Report-Msgid-Bugs-To: foswiki-svn@lists.sourceforge.net\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2016-02-25 16:35+0200\n"
+"Last-Translator: Michael Daum <foswiki@michaeldaumconsulting.com>\n"
+"Language-Team: German <http://translate.foswiki.org/projects/foswiki/"
+"distribution-master/de/>\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 2.4\n"
+
+#: data/Sandbox/TimeTrackerViewTemplate.txt:34
+msgid "Add a new effort"
+msgstr "Einen Aufwand hinzufügen"
+
+#: data/Sandbox/TimeTrackerViewTemplate.txt:33
+msgid "Add effort"
+msgstr "Aufwand hinzufügen"
+
+#: templates/metadataplugin.tmpl:121
+msgid "Are you sure that you want to delete this record?"
+msgstr "Sind Sie sicher, dass Sie diesen Eintrag löschen wollen?"
+
+#: templates/metadataplugin.tmpl:105 templates/metadataplugin.tmpl:54
+#: templates/metadataplugin.tmpl:82
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: data/Sandbox/TimeTracker.txt:71
+msgid "Changed"
+msgstr "Geändert"
+
+#: templates/metadataplugin.tmpl:119
+msgid "Confirmation required"
+msgstr "Bestätigung erforderlich"
+
+#: data/Sandbox/TimeTracker.txt:33
+msgid "Create a new %1"
+msgstr "Neue %1 anlegen"
+
+#: templates/metadataplugin.tmpl:6
+msgid "Delete"
+msgstr "Löschen"
+
+#: data/Sandbox/TimeTrackerEditTemplate.txt:9
+msgid "Details"
+msgstr "Details"
+
+#: templates/metadataplugin.tmpl:4 templates/metadataplugin.tmpl:71
+msgid "Duplicate"
+msgstr "Kopieren"
+
+#: lib/Foswiki/Plugins/MetaDataPlugin/Core.pm:850
+#: templates/metadataplugin.tmpl:3 templates/metadataplugin.tmpl:40
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: data/Sandbox/TimeTrackerViewTemplate.txt:28
+msgid "Edit this effort"
+msgstr "Diesen Aufwand bearbeiten"
+
+#: templates/metadataplugin.tmpl:5 templates/metadataplugin.tmpl:90
+msgid "Move"
+msgstr "Verschieben"
+
+#: data/Sandbox/TimeTracker.txt:19
+msgid "New"
+msgstr "Neu"
+
+#: lib/Foswiki/Plugins/MetaDataPlugin/Core.pm:145
+msgid "New %1"
+msgstr "Neu %1"
+
+#: templates/metadataplugin.tmpl:63
+msgid "Next"
+msgstr "Weiter"
+
+#: templates/metadataplugin.tmpl:128
+msgid "No, thanks"
+msgstr "Nein, danke"
+
+#: data/Sandbox/TimeTrackerEditTemplate.txt:32
+msgid "Notes"
+msgstr "Notizen"
+
+#: templates/metadataplugin.tmpl:62
+msgid "Previous"
+msgstr "Zurück"
+
+#: templates/metadataplugin.tmpl:104 templates/metadataplugin.tmpl:53
+#: templates/metadataplugin.tmpl:81
+msgid "Save"
+msgstr "Speichern"
+
+#: data/Sandbox/TimeTracker.txt:48
+msgid "Submit"
+msgstr "Abschicken"
+
+#: data/Sandbox/TimeTrackerViewTemplate.txt:24
+msgid "Sum"
+msgstr "Summe"
+
+#: data/Sandbox/TimeTracker.txt:70
+msgid "Summary"
+msgstr "Zusammenfassungen"
+
+#: templates/metadataplugin.tmpl:141
+msgid "This topic is locked. <br />Please try again later."
+msgstr ""
+"Dieser Artikel ist gesperrt. <br />Bitte versuchen Sie es später nochmal."
+
+#: data/Sandbox/TimeTracker.txt:39 data/Sandbox/TimeTracker.txt:69
+#: data/Sandbox/TimeTrackerEditTemplate.txt:14
+#: templates/metadataplugin.tmpl:67
+msgid "Title"
+msgstr "Titel"
+
+#: data/Sandbox/TimeTrackerViewTemplate.txt:25
+msgid "Total"
+msgstr "Gesamt"
+
+#: templates/metadataplugin.tmpl:141 templates/metadataplugin.tmpl:22
+msgid "Warning"
+msgstr "Warnung"
+
+#: templates/metadataplugin.tmpl:127
+msgid "Yes, delete"
+msgstr "Ja, löschen"
+
+#: data/Sandbox/TimeTracker.txt:16
+msgid "flag indicating whether these efforts have already been invoiced"
+msgstr "Zeigt an, ob diese Auwände bereits abgerechnet worden sind"
+
+#: data/Sandbox/TimeTracker.txt:14
+msgid "hourly rates"
+msgstr "Stundensatz"
+
+#: data/Sandbox/TimeTracker.txt:15
+msgid "tax fee per effort in percent"
+msgstr "Steuersatz in Prozent"

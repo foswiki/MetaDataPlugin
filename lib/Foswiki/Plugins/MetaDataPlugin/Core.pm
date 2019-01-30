@@ -1,6 +1,6 @@
 # Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# MetaDataPlugin is Copyright (C) 2011-2017 Michael Daum http://michaeldaumconsulting.com
+# MetaDataPlugin is Copyright (C) 2011-2019 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,16 +23,18 @@ use Foswiki::Meta ();
 use Foswiki::Form ();
 use Foswiki::Time ();
 use Foswiki::Form::Label ();
+use Foswiki::Form::Text ();
+use Foswiki::Form::Date ();
 use Foswiki::Plugins::JQueryPlugin ();
 use Error qw( :try );
-
-#use Data::Dumper();
 
 use constant TRACE => 0; # toggle me
 
 ##############################################################################
 sub writeDebug {
-  Foswiki::Func::writeDebug("MetaDataPlugin::Core - $_[0]") if TRACE;
+  return unless TRACE;
+  print STDERR "MetaDataPlugin::Core - $_[0]\n";
+  #Foswiki::Func::writeDebug("MetaDataPlugin::Core - $_[0]") if TRACE;
 }
 
 ##############################################################################
@@ -48,35 +50,6 @@ sub new {
   #writeDebug("done new()");
 
   return $this;
-}
-
-##############################################################################
-sub init {
-  my $this = shift;
-
-  return if $this->{_init};
-  $this->{_init} = 1;
-
-  #writeDebug("called init()");
-
-  Foswiki::Func::readTemplate("metadataplugin");
-
-  Foswiki::Plugins::JQueryPlugin::createPlugin("ui::dialog");
-  Foswiki::Plugins::JQueryPlugin::createPlugin("ui::button");
-  Foswiki::Plugins::JQueryPlugin::createPlugin("validate");
-  Foswiki::Plugins::JQueryPlugin::createPlugin("blockui");
-  Foswiki::Plugins::JQueryPlugin::createPlugin("form");
-  Foswiki::Plugins::JQueryPlugin::createPlugin("jsonrpc");
-
-  Foswiki::Func::addToZone("script", "METADATAPLUGIN", <<'EOB', "JQUERYPLUGIN, JQUERYPLUGIN::UI::DIALOG, JQUERYPLUGIN::UI::BUTTON, JQUERYPLUGIN::JSONRPC");
-<script type='text/javascript' src='%PUBURLPATH%/%SYSTEMWEB%/MetaDataPlugin/metadata.js'></script>
-EOB
-
-  Foswiki::Func::addToZone("head", "METADATAPLUGIN", <<'EOB', "JQUERYPLUGIN");
-<link rel='stylesheet' href='%PUBURLPATH%/%SYSTEMWEB%/MetaDataPlugin/metadata.css' media='all' />
-EOB
-
-  #writeDebug("done init()");
 }
 
 ##############################################################################
@@ -112,7 +85,7 @@ sub registerDeleteHandler {
 sub registerSaveHandler {
   my ($this, $function, $options) = @_;
 
-  writeDebug("called registerSaveHandler()");
+  #writeDebug("called registerSaveHandler()");
 
   push @{$this->{saveHandler}}, {
     function => $function,
@@ -127,9 +100,9 @@ sub NEWMETADATA {
   my ($this, $params) = @_;
 
   #writeDebug("called NEWMETADATA()");
-  $this->init();
+  Foswiki::Plugins::JQueryPlugin::createPlugin("metadataplugin");
 
-  my $theMetaData = lc($params->{_DEFAULT} || $params->{meta} || '');
+  my $theMetaData = lc($params->{_DEFAULT} || $params->{meta} // '');
   my $theWarn = Foswiki::Func::isTrue($params->{warn}, 0);
 
   my $metaDataKey = uc($theMetaData);
@@ -141,10 +114,11 @@ sub NEWMETADATA {
   my $theFormat = $params->{format};
   my $theTemplate = $params->{template} || 'metadata::new';
   my $theTopic = $params->{topic} || $this->{session}{webName}.'.'.$this->{session}{topicName};
-  my $theMap = $params->{map} || '';
-  my $theIcon = $params->{icon} || 'add';
-  my $theIncludeAttr = $params->{includeattr} || '';
-  my $theExcludeAttr = $params->{excludeattr} || '';
+  my $theMap = $params->{map} // '';
+  my $theIcon = $params->{icon} || 'fa-plus';
+  my $theIncludeAttr = $params->{includeattr} // '';
+  my $theExcludeAttr = $params->{excludeattr} // '';
+  my $theAnchor = $params->{anchor} // '';
 
   foreach my $map (split(/\s*,\s*/, $theMap)) {
     $map =~ s/\s*$//;
@@ -160,10 +134,11 @@ sub NEWMETADATA {
     my $val = $params->{$key};
     if ($key =~ /_title$/) {
       $key =~ s/_title$//;
+      # TODO: do we need to rewrite the key here as well
       push @mapping, $key.'='.$val;
     } elsif ($key =~ /_value$/) {
       $key =~ s/_value$//;
-      push @values, $key.'='.$val;
+      push @values, 'META:'.uc($theMetaData).':id:'.$key.'='.$val;
     }
   }
   $theMap = join(",", @mapping);
@@ -192,6 +167,7 @@ sub NEWMETADATA {
   $theFormat =~ s/%icon%/$theIcon/g;
   $theFormat =~ s/%includeattr%/$theIncludeAttr/g;
   $theFormat =~ s/%excludeattr%/$theExcludeAttr/g;
+  $theFormat =~ s/%anchor%/$theAnchor/g;
 
   #writeDebug("done NEWMETADATA()");
   
@@ -202,8 +178,8 @@ sub NEWMETADATA {
 sub RENDERMETADATA {
   my ($this, $params) = @_;
 
-  #writeDebug("called RENDERMETADATA()");
-  $this->init();
+  writeDebug("called RENDERMETADATA()");
+  Foswiki::Plugins::JQueryPlugin::createPlugin("metadataplugin");
 
   my $metaData = $params->{_DEFAULT};
   my $topic = $params->{topic} || $this->{session}{topicName};
@@ -228,7 +204,7 @@ sub RENDERMETADATA {
   my $currentWikiName = Foswiki::Func::getWikiName();
   $params->{_isLocked} = ($params->{_lockedBy} ne '' && $params->{_lockedBy} ne $currentWikiName)?1:0;
 
-  #print STDERR "currentWikiName=$currentWikiName, lockedBy=$params->{_lockedBy}, isLocked=$params->{_isLocked}\n";
+  writeDebug("currentWikiName=$currentWikiName, lockedBy=$params->{_lockedBy}, isLocked=$params->{_isLocked}");
 
   return ($warn?inlineError("%MAKETEXT{\"Warning: this topic is locked by user [_1].\" args=\"$params->{_lockedBy}\"}%"):'')
     if $action eq 'edit' && $params->{_isLocked};
@@ -254,7 +230,6 @@ sub RENDERMETADATA {
     }
   }
 
-  #writeDebug("called RENDERMETADATA()");
   return $result;
 }
 
@@ -262,9 +237,9 @@ sub RENDERMETADATA {
 sub renderMetaData {
   my ($this, $topicObj, $params, $metaData) = @_;
 
-  #writeDebug("called renderMetaData()");
+  writeDebug("called renderMetaData()");
 
-  my $query = Foswiki::Func::getCgiQuery();
+  my $query = Foswiki::Func::getRequestObject();
 
   my $theAction = $params->{action} || 'view';
   my $theFields = $params->{field} || $params->{fields};
@@ -272,12 +247,12 @@ sub renderMetaData {
   my $theFormat = $params->{format};
   my $theHeader = $params->{header};
   my $theFooter = $params->{footer};
-  my $theSep = $params->{separator} || '';
+  my $theSep = $params->{separator} // '';
   my $theValueSep = $params->{valueseparator} || ', ';
   my $theInclude = $params->{include};
   my $theExclude = $params->{exclude};
-  my $theIncludeAttr = $params->{includeattr};
-  my $theExcludeAttr = $params->{excludeattr};
+  my $theIncludeAttr = $params->{includeattr} // '';
+  my $theExcludeAttr = $params->{excludeattr} // '';
   my $theMandatory = $params->{mandatory};
   my $theHiddenFormat = $params->{hiddenformat};
   my $theHideEmpty = Foswiki::Func::isTrue($params->{hideempty}, 0);
@@ -287,11 +262,19 @@ sub renderMetaData {
   my $theFieldFormat = $params->{fieldformat};
   my $theFilter = $params->{filter};
   my $theWarn = Foswiki::Func::isTrue($params->{warn}, 1);
-  my $theMap = $params->{map} || '';
-  my $theFieldHeader = $params->{fieldheader} || '';
-  my $theFieldFooter = $params->{fieldfooter} || '';
-  my $theFieldSep = $params->{fieldseparator} || '';
-  my $theHidden = $params->{hidden} || '';
+  my $theMap = $params->{map} // '';
+  my $theFieldHeader = $params->{fieldheader} // '';
+  my $theFieldFooter = $params->{fieldfooter} // '';
+  my $theFieldSep = $params->{fieldseparator} // '';
+  my $theHidden = $params->{hidden} // '';
+  my $theAnchor = $params->{anchor} // '';
+  my $theEnabledActions = $params->{enabledactions};
+  $theEnabledActions = 'edit,delete,move,duplicate' unless defined $theEnabledActions;
+  $theEnabledActions =~ s/^\s+|\s+$//g;
+  my %enabledActions = map {lc($_) => 1} split(/\s*,\s*/, $theEnabledActions);
+  my $theLimit = $params->{limit} || 0;
+  my $theSkip = $params->{skip} || 0;
+  my $theNavigation = Foswiki::Func::isTrue($params->{navigation}, 1);
 
   foreach my $map (split(/\s*,\s*/, $theMap)) {
     $map =~ s/\s*$//;
@@ -350,35 +333,18 @@ sub renderMetaData {
   }
 
 
-  $theMandatory = " <span class='foswikiAlert'>**</span> " unless defined $theMandatory;
-  $theHiddenFormat = '<input type="hidden" name="$metaname" value="$origvalue" />' unless defined $theHiddenFormat; 
-
   $theSort = 'name' unless defined $theSort;
   $theSort = '' if $theSort eq 'off';
 
-  my $metaDataKey = uc($metaData);
-  my $metaDataDef = $Foswiki::Meta::VALIDATE{$metaDataKey};
-  return ($theWarn?inlineError("can't find meta data definition for $metaDataKey"):'') unless defined $metaDataDef;
-
-  my $formWeb = $this->{session}{webName};
-  my $formTopic = $metaDataDef->{form};
-
-  $formTopic = $Foswiki::cfg{SystemWebName}.'.'.ucfirst(lc($metaData)).'Form' 
-    unless defined $formTopic;
-
-# unless (defined $formTopic) {
-#   print STDERR "error: no form definition found for metadata $metaDataKey\n";
-#   return $theWarn?inlineError("no form definition found for metadata $metaDataKey"):'';
-# }
-
-  ($formWeb, $formTopic) = Foswiki::Func::normalizeWebTopicName($formWeb, $formTopic);
-
-  #writeDebug("formWeb=$formWeb, formTopic=$formTopic");
+  my ($formWeb, $formTopic) = $this->getFormOfMetaData($metaData);
+  return ($theWarn?inlineError("can't find meta data definition for $metaData"):'') unless defined $formWeb;
+  
+  writeDebug("formWeb=$formWeb, formTopic=$formTopic");
   my $wikiName = Foswiki::Func::getWikiName();
-  return ($theWarn?inlineError("access denied to form definition for <nop>$metaDataKey"):'')
+  return ($theWarn?inlineError("access denied to form definition for <nop>$metaData"):'')
     unless Foswiki::Func::checkAccessPermission("VIEW", $wikiName, undef, $formTopic, $formWeb);
 
-  return ($theWarn?inlineError("form definition for <nop>$metaDataKey not found"):'')
+  return ($theWarn?inlineError("form definition for <nop>$metaData not found"):'')
     unless Foswiki::Func::topicExists($formWeb, $formTopic);
 
   my $formDef;
@@ -405,13 +371,13 @@ sub renderMetaData {
   my @selectedFields = ();
   if ($theFields) {
     foreach my $fieldName (split(/\s*,\s*/, $theFields)) {
-      $fieldName =~ s/\s*$//;
-      $fieldName =~ s/^\s*//;
+      $fieldName =~ s/^\s+|\s+$//g;
       my $field;
       if ($fieldName eq 'index') {
         $field = new Foswiki::Form::Label(
           session    => $this->{session},
           name       => 'index',
+          type       => 'label',
           title      => '#',
           description => '',
         );
@@ -419,8 +385,25 @@ sub renderMetaData {
         $field = new Foswiki::Form::Label(
           session    => $this->{session},
           name       => 'name',
+          type       => 'label',
           title      => '#',
           attributes => 'h',
+          description => '',
+        );
+      }  elsif ($fieldName =~ /^(create)?date$/) {
+        $field = new Foswiki::Form::Date (
+          session    => $this->{session},
+          name       => $fieldName,
+          title       => $fieldName,
+          type       => 'date',
+          description => '',
+        );
+      }  elsif ($fieldName =~ /^(create)?author$/) {
+        $field = new Foswiki::Form::Text (
+          session    => $this->{session},
+          name       => $fieldName,
+          title       => $fieldName,
+          type       => 'text',
           description => '',
         );
       }  else {
@@ -433,6 +416,7 @@ sub renderMetaData {
       my $indexField = new Foswiki::Form::Label(
         session    => $this->{session},
         name       => 'index',
+        type       => 'label',
         title      => '#',
         description => '',
       );
@@ -441,6 +425,7 @@ sub renderMetaData {
     my $nameField = new Foswiki::Form::Label(
         session    => $this->{session},
         name       => 'name',
+        type       => 'label',
         title      => '#',
         attributes => 'h',
         description => '',
@@ -448,7 +433,6 @@ sub renderMetaData {
     push @selectedFields, $nameField;
     foreach my $field (@{$formDef->getFields()}) {
       my $fieldAttrs = $field->{attributes};
-      next if $fieldAttrs =~ /h/i;
       next if $theIncludeAttr && $fieldAttrs !~ /^($theIncludeAttr)$/;
       next if $theExcludeAttr && $fieldAttrs =~ /^($theExcludeAttr)$/;
       push @selectedFields, $field;
@@ -458,14 +442,18 @@ sub renderMetaData {
   my $name = $params->{name};
 
   # default formats
+  $theMandatory = " <span class='foswikiAlert'>**</span> " unless defined $theMandatory;
+
   unless (defined $theHeader) {
     if ($theAction eq 'view') {
       if (defined $name) { # single mode
-        $theHeader = '<div class=\'foswikiPageForm\'>$n<table class=\'foswikiLayoutTable\'><tbody>$n';
+        $theHeader = '<div class=\'foswikiPageForm\'>$n<table class=\'foswikiLayoutTable $class\'><tbody>$n';
       } else {
-        $theHeader = '<div class=\'metaDataView'.($params->{_gotWriteAccess}?'':' metaDataReadOnly').'\'>$n<table class="foswikiTable"><thead><tr><th>$n'.join(' </th><th>$n', 
+        $theHeader = '<div class=\'metaDataView'.($params->{_gotWriteAccess}?'':' metaDataReadOnly').'\'>$n<table class="foswikiTable $class"><thead><tr><th>$n'.join(' </th><th>$n', 
           map {
-            my $title = $_->{title}; defined($params->{$title.'_title'})?$params->{$title.'_title'}:$title
+            my $title = $_->{title}; 
+            my $name = $_->{name}; 
+            defined($params->{$name.'_title'})?$params->{$name.'_title'}:$title
           } 
           grep {$_->{name} ne 'name'}
           @selectedFields).' </th></tr></thead><tbody>$n';
@@ -514,6 +502,14 @@ sub renderMetaData {
     }
   }
 
+  unless (defined $theHiddenFormat) {
+    if ($theAction eq 'view') {
+      $theHiddenFormat = $theFieldFormat;
+    } else {
+      $theHiddenFormat = '<input type="hidden" name="$metaname" value="$origvalue" />';
+    }
+  }
+
   unless (defined $theFooter) {
     if ($theAction eq 'view') {
       if (defined $name) { # single mode
@@ -536,6 +532,7 @@ sub renderMetaData {
 
   my @result = ();
   my @metaDataRecords;
+  my $metaDataKey = uc($metaData);
   if (defined $name) {
     my $record;
     if ($name eq 'id') { # create a new record
@@ -553,6 +550,8 @@ sub renderMetaData {
 
   # build mapping
   $this->{_mapping} = ();
+
+  # TODO: use handlers
   if ($theAction ne 'edit' && Foswiki::Func::getContext()->{SocialFormfieldsPluginEnabled}) {
     require Foswiki::Plugins::SocialFormfieldsPlugin;
     my $socialCore = Foswiki::Plugins::SocialFormfieldsPlugin::getCore();
@@ -563,7 +562,7 @@ sub renderMetaData {
         my $fieldName = $field->{name};
         next if $fieldName eq 'index';
         my $fieldValue = $record->{$fieldName};
-        if ($fieldValue =~ /^social\-(.*)$/) {
+        if (defined $fieldValue && $fieldValue =~ /^social\-(.*)$/) {
           my ($intVal) = $socialCore->getAverageVote($1);
           my $val = $socialCore->convertIntToVal(undef, $field, $intVal); 
           $this->{_mapping}{$fieldValue} = $val;
@@ -576,9 +575,8 @@ sub renderMetaData {
   $this->sortRecords(\@metaDataRecords, $theSort, $topicObj) if $theSort;
   @metaDataRecords = reverse @metaDataRecords if $theReverse;
 
-
   # loop over all meta data records
-  my $index = 1;
+  my $index = 0;
   foreach my $record (@metaDataRecords) {
     my $row = $theFormat;
     my $name = $record->{name};
@@ -587,8 +585,13 @@ sub renderMetaData {
     next if defined $theInclude && !defined($includeMap{$name});
     next if defined $theExclude && $excludeMap{$name};
 
+    $index++;
+    last if $theLimit && $index > $theLimit;
+    next if $theSkip && $index <= $theSkip;
+
     # loop over all fields of a record
     my @fieldResult = ();
+    my %fieldValues = ();
     foreach my $field (@selectedFields) {
       next unless $field;
 
@@ -647,7 +650,7 @@ sub renderMetaData {
       # get the default value
       my $fieldDefault = '';
       if ($field->can('getDefaultValue')) {
-        $fieldDefault = $field->getDefaultValue() || '';
+        $fieldDefault = $field->getDefaultValue() // '';
       } 
 
       my $fieldValue;
@@ -656,6 +659,14 @@ sub renderMetaData {
         $fieldValue = $index;
       } else {
         $fieldValue = $this->getFieldValue($record, $fieldName);
+      }
+
+      if ($fieldName =~ /^(create)?date$/) {
+        $fieldValue ||= 0;
+        $fieldValue = Foswiki::Func::formatTime($fieldValue);
+      } elsif ($fieldName =~ /^(create)?author$/) {
+        $fieldValue = 'unknown' unless defined $fieldValue;
+        $fieldValue = Foswiki::Func::getWikiName($fieldValue);
       }
 
       # try not to break foswiki tables
@@ -671,11 +682,16 @@ sub renderMetaData {
       $fieldAllowedValues = $params->{$fieldName.'_values'} if defined $params->{$fieldName.'_values'};
       $fieldType = $params->{$fieldName.'_type'} if defined $params->{$fieldName.'_type'};
       $fieldValue = $params->{$fieldName.'_value'} if defined $params->{$fieldName.'_value'}; # or get value from macro invocation
-      $fieldFormat = $params->{$fieldName.'_format'} if defined $params->{$fieldName.'_format'};
       $fieldDefault = $params->{$fieldName.'_default'} if defined $params->{$fieldName.'_default'};
 
       my $fieldIsHidden = ($fieldAttrs=~ /h/i || $theHidden && $fieldName =~ /^($theHidden)$/) ? 1 : 0;
       $fieldIsHidden = Foswiki::Func::isTrue($params->{$fieldName.'_hidden'}, 0) if defined $params->{$fieldName.'_hidden'};
+
+      if (defined $params->{$fieldName.'_format'}) {
+        $fieldFormat = $params->{$fieldName.'_format'};
+      } else {
+        $fieldFormat = $theHiddenFormat if $fieldIsHidden;
+      }
 
       my $fieldMandatory = $field->isMandatory?$theMandatory:'';
 
@@ -702,9 +718,12 @@ sub renderMetaData {
 
       $fieldValue = $fieldDefault unless defined $fieldValue;
       $fieldDescription = '' unless defined $fieldDescription;
-      #writeDebug("metaData=$metaData, fieldName=$fieldName, fieldValue=$fieldValue");
+      writeDebug("metaData=$metaData, fieldName=$fieldName, fieldValue=$fieldValue");
 
-      next if $theHideEmpty && $theAction eq 'view' && (!defined($fieldValue) || $field eq '');
+      if ($theHideEmpty && $theAction eq 'view' && (!defined($fieldValue) || $fieldValue eq '')) {
+        $row =~ s/\$$fieldName//g;
+        next;
+      }
 
       # temporarily remap field to another type
       my $fieldClone;
@@ -727,8 +746,6 @@ sub renderMetaData {
       } 
 
       my $line = $fieldFormat;
-      $line = $theHiddenFormat if $fieldIsHidden;
-
       $line = '<noautolink>'.$line.'</noautolink>' unless $fieldAutolink;
 
       # some must be expanded before renderForDisplay/renderForDisplay
@@ -746,25 +763,23 @@ sub renderMetaData {
       my $fieldExtra = '';
       my $fieldEdit = '';
 
-      unless ($fieldIsHidden) {
-        $fieldValue = "\0" unless defined $fieldValue; # prevent dropped value attr in CGI.pm
+      $fieldValue = "\0" unless defined $fieldValue; # prevent dropped value attr in CGI.pm
 
-        if ($theAction eq 'edit') {
-          if ($Foswiki::Plugins::VERSION > 2.0) {
-            ($fieldExtra, $fieldEdit) = 
-              $field->renderForEdit($topicObj, $origValue);
-          } else {
-            # pre-TOM
-            ($fieldExtra, $fieldEdit) = 
-              $field->renderForEdit($topicObj->web, $topicObj->topic, $origValue);
-          }
+      if ($theAction eq 'edit') {
+        if ($Foswiki::Plugins::VERSION > 2.0) {
+          ($fieldExtra, $fieldEdit) = 
+            $field->renderForEdit($topicObj, $origValue);
         } else {
-          $line = $field->renderForDisplay($line, $fieldValue, {
-            bar=>'|', # SMELL: keep bars
-            newline=>'$n', # SMELL: keep newlines
-            display=>1
-          }); # SMELL what about the attrs param in Foswiki::Form; wtf is this attr anyway
+          # pre-TOM
+          ($fieldExtra, $fieldEdit) = 
+            $field->renderForEdit($topicObj->web, $topicObj->topic, $origValue);
         }
+      } else {
+        $line = $field->renderForDisplay($line, $fieldValue, {
+          bar=>'|', # SMELL: keep bars
+          newline=>'$n', # SMELL: keep newlines
+          display=>1
+        }); # SMELL what about the attrs param in Foswiki::Form; wtf is this attr anyway
       }
 
       $fieldEdit =~ s/\0//g;
@@ -799,13 +814,18 @@ sub renderMetaData {
       $line =~ s/\$title\b/$fieldTitle/g;
       $line =~ s/\$extra\b/$fieldExtra/g;
       $line =~ s/\$origvalue\b/$origValue/g;
-      $line =~ s/\$formatTime\((.*?)(?:,\s*'([^']*?)')?\)/Foswiki::Time::formatTime($1, $2)/ge;
 
       $title = $fieldValue if $fieldName =~ /^(Topic)?Title/i;
 
       $row =~ s/\$$fieldName\b/$line/g;
       $row =~ s/\$orig$fieldName\b/$fieldValue/g;
 
+      $fieldValues{$fieldName} = {
+        value => $line,
+        orig => $fieldValue,
+      };
+
+      writeDebug("line=$line");
       push @fieldResult, $line;
 
       # cleanup
@@ -813,7 +833,7 @@ sub renderMetaData {
       $field->{name} = $fieldName;
     }
     
-    #writeDebug("row=$row");
+    writeDebug("row='$row'");
 
     $title = $name unless $title;
 
@@ -822,10 +842,10 @@ sub renderMetaData {
     if ($params->{_gotWriteAccess}) {
       $fieldActions = Foswiki::Func::expandTemplate("metadata::actions");
 
-      my $fieldEditAction = Foswiki::Func::expandTemplate("metadata::action::edit");
-      my $fieldDeleteAction = Foswiki::Func::expandTemplate("metadata::action::delete");
-      my $fieldDuplicateAction = Foswiki::Func::expandTemplate("metadata::action::duplicate");
-      my $fieldMoveAction = Foswiki::Func::expandTemplate("metadata::action::move");
+      my $fieldEditAction = $enabledActions{edit}?Foswiki::Func::expandTemplate("metadata::action::edit"):"";
+      my $fieldDeleteAction = $enabledActions{delete}?Foswiki::Func::expandTemplate("metadata::action::delete"):"";
+      my $fieldDuplicateAction = $enabledActions{duplicate}?Foswiki::Func::expandTemplate("metadata::action::duplicate"):"";
+      my $fieldMoveAction = $enabledActions{move}?Foswiki::Func::expandTemplate("metadata::action::move"):"";
 
       my $topic = $topicObj->getPath;
       if (defined $params->{edittitle}) {
@@ -834,16 +854,23 @@ sub renderMetaData {
         $title = '%MAKETEXT{"Edit"}% '.$title;
       }
 
+      my $id = "metaDataAction".(int( rand(10000) ) + 1);
+      my $navigation = $theNavigation?"on":"off";
+
       $fieldActions =~ s/\%edit\%/$fieldEditAction/g;
       $fieldActions =~ s/\%duplicate\%/$fieldDuplicateAction/g;
       $fieldActions =~ s/\%delete\%/$fieldDeleteAction/g;
       $fieldActions =~ s/\%move\%/$fieldMoveAction/g;
-
       $fieldActions =~ s/\%title\%/$title/g;
       $fieldActions =~ s/\%name\%/$name/g;
       $fieldActions =~ s/\%meta\%/$metaData/g;
       $fieldActions =~ s/\%topic\%/$topic/g;
       $fieldActions =~ s/\%map\%/$theMap/g;
+      $fieldActions =~ s/\%anchor\%/$theAnchor/g;
+      $fieldActions =~ s/\%id\%/$id/g;
+      $fieldActions =~ s/\%navigation\%/$navigation/g;
+      $fieldActions =~ s/%includeattr%/$theIncludeAttr/g;
+      $fieldActions =~ s/%excludeattr%/$theExcludeAttr/g;
     }
 
     my $fieldResult = '';
@@ -852,19 +879,28 @@ sub renderMetaData {
     $row =~ s/\$actions\b/$fieldActions/g;
     $row =~ s/\$index\b/$index/g;
     $row =~ s/\$id\b/$name/g;
+    $row =~ s/\$date\b/$record->{date}/g;
+    $row =~ s/\$createdate\b/$record->{createdate}/g;
     $row =~ s/\$fields\b/$fieldResult/g;
+    $row =~ s/\$formatTime\((.*?)(?:,\s*'([^']*?)')?\)/Foswiki::Func::formatTime($1, $2)/ge;
 
-    push @result, $row;
-    $index++;
+    foreach my $fieldName (keys %fieldValues) {
+      $row =~ s/\$$fieldName\b/$fieldValues{$fieldName}{value}/g;
+      $row =~ s/\$orig$fieldName\b/$fieldValues{$fieldName}{orig}/g;
+    }
+
+    push @result, $row unless $theHideEmpty && $row eq '';
   }
 
   return '' if $theHideEmpty && !@result;
 
+  my $theClass = $params->{class} // '';
   my $result = $theHeader.join($theSep, @result).$theFooter;
 
-  my $formTitle = _getTopicTitle($formWeb, $formTopic);
+  my $formTitle = Foswiki::Func::getTopicTitle($formWeb, $formTopic);
 
   $index--;
+  $result =~ s/\$class/$theClass/g;
   $result =~ s/\$count/$index/g;
   $result =~ s/\$metadata\b/$metaData/g; # the meta data name
   $result =~ s/\$form\b/$formWeb.$formTopic/g; # the meta data definition
@@ -890,7 +926,7 @@ sub getTopicObject {
   $topic ||= '';
   $rev ||= '';
   
-  $web =~ s/\//\./go;
+  $web =~ s/\//\./g;
   my $key = $web.'.'.$topic.'@'.$rev;
   my $topicObj = $this->{_topicObjs}{$key};
   
@@ -912,7 +948,7 @@ sub getKnownMetaData {
   unless (defined $this->{_knownMetaData}) {
     $this->{_knownMetaData} = [];
     foreach my $name (sort keys %Foswiki::Meta::VALIDATE) {
-      next if $name =~ /^(TOPICINFO|VERSIONS|CREATEINFO|STORAGE|TOPICMOVED|FIELD|FORM|FILEATTACHMENT|TOPICPARENT)$/;
+      next if $name =~ /^(TOPICINFO|VERSIONS|CREATEINFO|STORAGE|TOPICMOVED|FIELD|FORM|FILEATTACHMENT|TOPICPARENT|PREFERENCE)$/;
       push @{$this->{_knownMetaData}}, $name;
     }
   };
@@ -922,16 +958,37 @@ sub getKnownMetaData {
 }
 
 ##############################################################################
+sub getFormOfMetaData {
+  my ($this, $metaData) = @_;
+
+  my $metaDataKey = uc($metaData);
+  my $metaDataDef = $Foswiki::Meta::VALIDATE{$metaDataKey};
+  return unless defined $metaDataDef;
+
+  my $formWeb = $this->{session}{webName};
+  my $formTopic = $metaDataDef->{form};
+
+  $formTopic = $Foswiki::cfg{SystemWebName}.'.'.ucfirst(lc($metaData)).'Form' 
+    unless defined $formTopic;
+
+  ($formWeb, $formTopic) = Foswiki::Func::normalizeWebTopicName($formWeb, $formTopic);
+
+  return ($formWeb, $formTopic);
+}
+
+##############################################################################
 sub beforeSaveHandler {
   my ($this, $text, $topic, $web, $meta) = @_;
 
   #writeDebug("called beforeSaveHandler($web.$topic)");
 
-  my $request = Foswiki::Func::getCgiQuery();
+  my $request = Foswiki::Func::getRequestObject();
   my %records = ();
 
   my $knownMetaDataPattern = join('|', $this->getKnownMetaData);
   #writeDebug("knownMetaDataPattern=$knownMetaDataPattern");
+
+  my $cUID = Foswiki::Func::getCanonicalUserID();
 
   my $explicitName;
   foreach my $urlParam ($request->param()) {
@@ -956,6 +1013,8 @@ sub beforeSaveHandler {
         # a new one 
         $record = { 
           name => 'id'.($this->getMaxId($metaDataName, $meta)+1),
+          createdate => time,
+          createauthor => $cUID,
         };
       } else {
         # go fetch from store
@@ -992,6 +1051,8 @@ sub beforeSaveHandler {
       my $metaData = $1;
       #my $name = $2;
       my $record = $records{$item};
+      $record->{date} = time;
+      $record->{author} = $cUID;
 
       # call save handlers
       if (defined $this->{saveHandler}) {
@@ -1120,8 +1181,8 @@ sub jsonRpcDelete {
   throw Foswiki::Contrib::JsonRpcContrib::Error(401, "Access denied")
     unless Foswiki::Func::checkAccessPermission("CHANGE", $currentWikiName, undef, $topic, $web, $meta);
 
-  my $name = $request->param('metadata::name') || '';
-  my $metaData = $request->param('metadata') || '';
+  my $name = $request->param('metadata::name') // '';
+  my $metaData = $request->param('metadata') // '';
 
   my $metaDataKey = uc($metaData);
 
@@ -1176,29 +1237,41 @@ sub sortRecords {
   my $isDate = 1;
   my %sortCrits = ();
   foreach my $rec (@$records) {
-    my $val = $this->getFieldValue($rec, $crit, $meta);
+    my $val;
+    if ($crit eq 'random') {
+      $val = rand();
+    } elsif ($crit eq 'name') {
+      $val = $rec->{name};
+      $val =~ s/^id//;
+      $isDate = 0;
+    } else {
+      $val = '';
+      foreach my $key (split(/\s*,\s*/, $crit)) {
+        my $v = $this->getFieldValue($rec, $key, $meta);
+        next unless defined $v;
+        $v =~ s/^\s*|\s*$//g;
+        $val .= $v;
+      }
+    }
     next unless defined $val;
-
-    $val =~ s/^\s*|\s*$//g;
 
     if ($isNumeric && $val !~ /^(\s*[+-]?\d+(\.?\d+)?\s*)$/) {
       $isNumeric = 0;
     }
 
-    if ($isDate && ! defined Foswiki::Time::parseTime($val)) {
-      $isDate = 0;
+    if ($isDate) {
+      my $epoch = Foswiki::Time::parseTime($val);
+      if (defined $epoch) {
+        $val = $epoch;
+      } else {
+        $isDate = 0;
+      }
     }
 
     $sortCrits{$rec->{name}} = $val;
   }
 
-  if ($isDate) {
-    # convert to epoch seconds if we sort per date
-    foreach my $key (keys %sortCrits) {
-      $sortCrits{$key} = Foswiki::Time::parseTime($sortCrits{$key});
-    }
-    $isNumeric = 1;
-  }
+  $isNumeric = 1 if $isDate;
 
   #print STDERR "crit=$crit, isNumeric=$isNumeric, isDate=$isDate\n";
 
@@ -1227,35 +1300,198 @@ sub getFieldValue {
 }
 
 ##############################################################################
-sub _getTopicTitle {
-  my ($web, $topic, $meta) = @_;
+sub solrIndexTopicHandler {
+  my ($this, $indexer, $doc, $web, $topic, $meta, $text) = @_;
 
-  ($meta) = Foswiki::Func::readTopic($web, $topic) unless defined $meta;
+  # make sure all metadata for this web has been registered
+  my $topics = Foswiki::Func::getPreferencesValue("WEBMETADATA", $web) // '';
+  Foswiki::Plugins::MetaDataPlugin::registerMetaData($topics) if $topics;
 
-  # read the formfield value
-  my $title = $meta->get('FIELD', 'TopicTitle');
-  $title = $title->{value} if $title;
-
-  # read the topic preference
-  unless ($title) {
-    $title = $meta->get('PREFERENCE', 'TOPICTITLE');
-    $title = $title->{value} if $title;
+  my @commonFields = ();
+  for my $field (qw(tag category webcat)) {
+    my @vals = $doc->values_for($field);
+    #print STDERR "field=$field, vals=@vals\n";
+    push @commonFields, [$field => $_] foreach @vals;
   }
 
-  # read the preference
-  unless ($title)  {
-    Foswiki::Func::pushTopicContext($web, $topic);
-    $title = Foswiki::Func::getPreferencesValue('TOPICTITLE');
-    Foswiki::Func::popTopicContext();
+  my @aclFields = $indexer->getAclFields($web, $topic, $meta);
+  push @commonFields, @aclFields if @aclFields;
+
+  foreach my $key ($this->getKnownMetaData) {
+    next unless $meta->find($key);
+    $this->solrIndexMetaData($indexer, $web, $topic, $meta, $key, \@commonFields);
   }
+}
 
-  # default to topic name
-  $title ||= $topic;
+##############################################################################
+sub solrIndexMetaData {
+  my ($this, $indexer, $web, $topic, $meta, $key, $commonFields) = @_;
 
-  $title =~ s/\s*$//;
-  $title =~ s/^\s*//;
+  # delete all previous keys of this topic
+  my $metaDataDef = $Foswiki::Meta::VALIDATE{$key};
+  my ($formWeb, $formTopic) = $this->getFormOfMetaData($key);
 
-  return $title;
-} 
+  my $formName = "$formWeb.$formTopic";
+  my $topicType = $formTopic;
+  $topicType =~ s/Form$//;
+  #print STDERR "metaData key=$key, topicType=$topicType, formWeb=$formWeb, formTopic=$formTopic\n";
+
+  $indexer->deleteByQuery("type:metadata form:$formName web:$web topic:$topic");
+
+  my $formDef;
+  try {
+    $formDef = new Foswiki::Form($this->{session}, $formWeb, $formTopic);
+  }
+  catch Error with {
+    #print STDERR "ERROR: MetaDataPlugin::Core::solrIndexMetaData() failed for $formWeb.$formTopic: ".shift."\n";
+  };
+  return unless defined $formDef;
+
+  my @aclFields = $indexer->getAclFields($web, $topic, $meta);
+  my %formFields = map { $_->{name} => $_ } @{$formDef->getFields()};
+  my $nameField = new Foswiki::Form::Label(
+    session => $this->{session},
+    name => 'name',
+    type => 'label',
+    title => '#',
+    attributes => 'h',
+    description => '',
+  );
+  $formFields{name} = $nameField;
+
+  my $url = $indexer->getScriptUrlPath($web, $topic, 'view');    # TODO: let's have an url to display one metadata record
+  my $contentLanguage = $indexer->getContentLanguage($web, $topic);
+  my $webtopic = "$web.$topic";
+  $webtopic =~ s/\//./g;
+
+  foreach my $record ($meta->find($key)) {
+
+    $indexer->log("Indexing $topicType $record->{name} at $web.$topic");
+
+    # create a solr doc for each record
+    my $doc = $indexer->newDocument();
+
+    $doc->add_fields(
+      'id' => $webtopic . '#' . $key . '#' . $record->{name},
+      'type' => 'metadata',
+      'form' => $formName,
+      'icon' => 'fa-database',
+      'name' => $record->{name},
+      'web' => $web,
+      'topic' => $topic,
+      'webtopic' => $webtopic,
+      'url' => $url,
+
+      'container_id' => $web . '.' . $topic,
+      'container_web' => $web,
+      'container_topic' => $topic,
+      'container_url' => Foswiki::Func::getViewUrl($web, $topic),
+      'container_title' => Foswiki::Func::getTopicTitle($web, $topic, undef, $meta),
+
+      'field_TopicType_lst' => $topicType,
+    );
+
+    # add extra fields, i.e. ACLs
+    $doc->add_fields(@$commonFields) if $commonFields && @$commonFields;
+
+    # loop over all fields of the record
+    my $foundTitle = 0;
+    my $foundText = 0;
+    my @texts = ();
+    foreach my $fieldName (keys %$record) {
+
+      my $fieldValue = $record->{$fieldName} // '';
+      my $fieldDef = $formFields{$fieldName};
+      my $fieldType = $fieldDef->{type} // '';
+      $fieldDef->{name} //= $fieldName;
+
+      next if $fieldName eq 'name';
+
+      # gather all text
+      push @texts, $fieldValue if $fieldValue ne "" && $fieldType eq "text";
+
+      #print STDERR "fieldName=$fieldName, fieldValue=$fieldValue\n";
+
+      # collect some standard fields
+      if ($fieldName eq 'date') {
+        $fieldValue = Foswiki::Time::formatTime($fieldValue, '$iso', 'gmtime');
+        $doc->add_fields("date" => $fieldValue);
+        next;
+      }
+
+      if ($fieldName eq 'createdate') {
+        $fieldValue = Foswiki::Time::formatTime($fieldValue, '$iso', 'gmtime');
+        $doc->add_fields("createdate" => $fieldValue);
+        next;
+      }
+
+      if ($fieldName eq 'author') {
+        $fieldValue = Foswiki::Func::getWikiName($fieldValue || 'unknown');
+        $doc->add_fields(
+            "author" => $fieldValue,
+            "author_title" => Foswiki::Func::getTopicTitle($Foswiki::cfg{UsersWebName}, $fieldValue),
+        );
+        next;
+      }
+
+      if ($fieldName eq 'createauthor') {
+        $fieldValue = Foswiki::Func::getWikiName($fieldValue || 'unknown');
+        $doc->add_fields(
+            "createauthor" => $fieldValue,
+            "createauthor_title" => Foswiki::Func::getTopicTitle($Foswiki::cfg{UsersWebName}, $fieldValue),
+        );
+        next;
+      }
+
+      if ($fieldName eq "Title" && $fieldValue ne "") {
+        $doc->add_fields("title", $fieldValue);
+        $foundTitle = 1;
+        next;
+      } 
+
+      if ($fieldName eq "Summary" && $fieldType eq 'text') {
+        $doc->add_fields("summary", $fieldValue) if $fieldValue ne "";
+        next;
+      } 
+
+      if ($fieldName eq "Text" && $fieldType eq 'text' && $fieldValue ne "") {
+        $doc->add_fields("text", $fieldValue);
+        if (defined $contentLanguage && $contentLanguage ne 'detect') {
+          $doc->add_fields(
+            language => $contentLanguage,
+            'text_' . $contentLanguage => $fieldValue,
+          );
+        }
+        $foundText = 1;
+        next;
+      }
+
+
+      $indexer->indexFormField($web, $topic, $fieldDef, $fieldValue, $doc) if $fieldDef;
+    }
+
+    # create an artificial title if not present explicitly
+    unless ($foundTitle) {
+      my $index = $record->{name};
+      $index =~ s/^id//;
+      $doc->add_fields("title", "$topicType $index");
+    }
+
+    # create a text if not present explicitly
+    unless ($foundText) {
+      $doc->add_fields("text", join(" ", @texts)) if scalar(@texts);
+    }
+
+
+    # add the document to the index
+    try {
+      $indexer->add($doc);
+    }
+    catch Error::Simple with {
+      my $e = shift;
+      $indexer->log("ERROR: " . $e->{-text});
+    };
+  }
+}
 
 1;

@@ -1,6 +1,8 @@
+*,v
 *.gz
 *.swp
 igp_*
+locale/**/*~
 pub/System/MetaDataPlugin/metadata.js
 pub/System/MetaDataPlugin/metadata.css
 /MetaDataPlugin.md5

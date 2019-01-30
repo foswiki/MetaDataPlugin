@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="ProjectContributor" comment="reprev" date="1398761969" format="1.1" reprev="2" version="4"}%
+%META:TOPICINFO{author="ProjectContributor" comment="" date="1548859142" format="1.1"  version="1"}%
 ---+!! %TOPIC%
 %FORMFIELD{"Description"}%
 
@@ -23,7 +23,7 @@ In short: !MetaDataPlugin marries !DataForms with custom =%META= data.
 !MetaDataPlugin comes with an example UI to list records and make them editable. See the Sandbox.TimeTracker
 application for example.
 
-Below screenshot 3 shows an integration with Foswiki:Extensions/HolidayListPlugin and Foswiki:Extensions/ICalPlugin
+Below screenshot 3 shows an integration with Foswiki:Extensions/HolidaylistPlugin and Foswiki:Extensions/ICalPlugin
 to render a ical driven resource view where all events are stored in =%<nop>META:EVENT{}%= records.
 
 %X% Note: this plugin requires a Foswiki engine >= 1.1.0.
@@ -49,6 +49,7 @@ topic edit screen.
 | "..." | key of the !MetaData type to be rendered; this name is derived from the topic name holding the !DataForm definition (see below) | |
 | name | name of one !MetaData record to be rendered; special name is =id= to render a form for a new !MetaData record to be created | |
 | action | indicates the action to perform on the records, can be =edit= or =view= | view |
+| anchor | anchor string appended to action urls | |
 | field(s) | list of formfields to render the interface for | all known formfields of a !DataForm |
 | name | select the id of a !MetaData record to be extracted | all records attached to the given topic |
 | topic | the topic to extract the !MetaData from | the current topic |
@@ -68,15 +69,19 @@ topic edit screen.
            note that the given =filter= will be used to perform a [[%SYSTEMWEB%.QuerySearch][query search]] by constructing a query of the form ='topic'/key[filter].name'=\
            where ='topic'= is the topic containing the meta data records, =key= is the name of the meta data. \
            example: =filter="FirstName='Raffael' or !FirstName='Judith'"=  | |
-| sort | name of attribute used for sorting | name |
+| sort | name of attribute used for sorting, or "random" for randomized ordering | name |
 | reverse | boolean flag to reverse the sorting order | off |
 | mandatory | string to be inserted when a field is mandatory | <span class='foswikiAlert'>**</span> |
 | hiddenformat | format string to be used to render hidden formfields | |
-| hideempty | boolean flag to hide/show empty formfields | off |
+| hideempty | boolean flag to hide/show empty formfields; note this only works in "single mode" that is when a =name= param was specified | off |
 | hidden | list of fields that are rendered hidden | |
 | warn | boolean flag to suppress error messages | on |
-| autolink | boolean flag to enable/prevent !WikiWord linking | on |
+| enabledactions | list of enabled actions for a record | edit,delete,move,duplicate |
+| navigation | boolean flag to enable/disable navigation between metadata records in the edit dialog | on |
+| autolink | boolean flag to enable/disable !WikiWord linking | on |
 | fieldformat | format string for a single formfield value in a row | =$value= |
+| fieldheader | header string prepended to the =fieldformat= result | |
+| fieldfooter | footer string appended to the =fieldformat= result | |
 | &lt;field_name>_attributes, %BR% \
   &lt;field_name>_autolink, %BR% \
   &lt;field_name>_default, %BR% \
@@ -189,6 +194,15 @@ have a database of efforts recorded on that tracker.
 %$DEPENDENCIES%
 
 ---++ Change History
+%TABLE{columnwidths="7em" tablewidth="100%"}%
+|  30 Jan 2019: | added solr index handler to make individual meta data searchable; \
+                  fixed =hideempty= parameter; \
+                  added parameters =anchor=, =enabledactions=, =fieldheader=, =fieldfooter=, =hidden=, =limit=, =skip= and =navigation=; \
+                  added random sorting; \
+                  now depend on !TopicTitlePlugin removing redundant local !TopicTitle implementation; \
+                  added prev-next navigation among metadata records; \
+                  improved localization; \
+                  make metadata.js a valid jQuery module, properly separating view and edit code |
 |  16 Jan 2017: | added =showindex=, =hidden= options to =%RENDERMETADATA=; \
                   added a "single record" mode to render one specific meta data record; \
                   better integration with <nop>SocialFormfieldsPlugin; \
@@ -229,16 +243,16 @@ have a database of efforts recorded on that tracker.
 |  25 Apr 2012: | initial release | 
 
 
-%META:FILEATTACHMENT{name="MetaDataPluginSnap1.png" attachment="MetaDataPluginSnap1.png" attr="" comment="" date="1335356137" size="27517" user="ProjectContributor" version="1"}%
-%META:FILEATTACHMENT{name="MetaDataPluginSnap2.png" attachment="MetaDataPluginSnap2.png" attr="" comment="" date="1335354029" size="18653" user="ProjectContributor" version="1"}%
-%META:FILEATTACHMENT{name="MetaDataPluginSnap3.png" attachment="MetaDataPluginSnap3.png" attr="" comment="" date="1335354684" size="33426" user="ProjectContributor" version="1"}%
 %META:FORM{name="PackageForm"}%
 %META:FIELD{name="Author" title="Author" value="Michael Daum"}%
-%META:FIELD{name="Copyright" title="Copyright" value="&copy; 2011-2017 Michael Daum http://michaeldaumconsulting.com"}%
+%META:FIELD{name="Version" title="Version" value="%25$VERSION%25"}%
+%META:FIELD{name="Release" title="Release" value="%25$RELEASE%25"}%
 %META:FIELD{name="Description" title="Description" value="%25$SHORTDESCRIPTION%25"}%
-%META:FIELD{name="Home" title="Home" value="Foswiki:Extensions/%TOPIC%"}%
+%META:FIELD{name="Repository" title="Repository" value="https://github.com/foswiki/%25TOPIC%25"}%
+%META:FIELD{name="Copyright" title="Copyright" value="&copy; 2011-2019 Michael Daum http://michaeldaumconsulting.com"}%
 %META:FIELD{name="License" title="License" value="[[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]]"}%
-%META:FIELD{name="Release" title="Release" value="%$RELEASE%"}%
-%META:FIELD{name="Repository" title="Repository" value="https://github.com/foswiki/%TOPIC%"}%
-%META:FIELD{name="Support" title="Support" value="Foswiki:Support/%TOPIC%"}%
-%META:FIELD{name="Version" title="Version" value="%$VERSION%"}%
+%META:FIELD{name="Home" title="Home" value="Foswiki:Extensions/%25TOPIC%25"}%
+%META:FIELD{name="Support" title="Support" value="Foswiki:Support/%25TOPIC%25"}%
+%META:FILEATTACHMENT{name="MetaDataPluginSnap1.png" attachment="MetaDataPluginSnap1.png" attr="" comment="" date="1548859142" size="27517" user="ProjectContributor" version="1"}%
+%META:FILEATTACHMENT{name="MetaDataPluginSnap2.png" attachment="MetaDataPluginSnap2.png" attr="" comment="" date="1548859142" size="18653" user="ProjectContributor" version="1"}%
+%META:FILEATTACHMENT{name="MetaDataPluginSnap3.png" attachment="MetaDataPluginSnap3.png" attr="" comment="" date="1548859142" size="33426" user="ProjectContributor" version="1"}%
