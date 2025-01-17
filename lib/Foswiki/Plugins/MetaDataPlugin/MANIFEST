@@ -1,13 +1,11 @@
 !noci
-data/Sandbox/EffortForm.txt 0644
-data/Sandbox/TimeTrackerEditTemplate.txt 0644
-data/Sandbox/TimeTrackerTemplate.txt 0644
-data/Sandbox/TimeTracker.txt 0644
-data/Sandbox/TimeTrackerViewTemplate.txt 0644
 data/System/MetaDataPlugin.txt 0644
 lib/Foswiki/Plugins/MetaDataPlugin/Config.spec 0644
 lib/Foswiki/Plugins/MetaDataPlugin/Core.pm 0644
 lib/Foswiki/Plugins/MetaDataPlugin/DEPENDENCIES 0644
+lib/Foswiki/Plugins/MetaDataPlugin/MANIFEST 0644
+lib/Foswiki/Plugins/MetaDataPlugin/Exporter.pm 0644
+lib/Foswiki/Plugins/MetaDataPlugin/Importer.pm 0644
 lib/Foswiki/Plugins/MetaDataPlugin/JQuery.pm 0644
 lib/Foswiki/Plugins/MetaDataPlugin.pm 0644
 locale/MetaDataPlugin/bg.po 0644
@@ -37,6 +35,7 @@ locale/MetaDataPlugin/zh-tw.po 0644
 pub/System/MetaDataPlugin/i18n/de.js 0644
 pub/System/MetaDataPlugin/i18n/en.js 0644
 pub/System/MetaDataPlugin/Makefile 0644
+pub/System/MetaDataPlugin/metadatabuttons.uncompressed.js 0644
 pub/System/MetaDataPlugin/metadata.css 0644
 pub/System/MetaDataPlugin/metadata.css.gz 0644
 pub/System/MetaDataPlugin/metadataedit.uncompressed.js 0644

@@ -1,11 +1,9 @@
 /*
  * MetaData View
  *
- * Copyright (c) 2011-2019 Michael Daum http://michaeldaumconsulting.com
+ * Copyright (c) 2011-2025 Michael Daum http://michaeldaumconsulting.com
  *
- * Dual licensed under the MIT and GPL licenses:
- *   http://www.opensource.org/licenses/mit-license.php
- *   http://www.gnu.org/licenses/gpl.html
+ * Licensed under the GPL license http://www.gnu.org/licenses/gpl.html
  *
  */
 "use strict";
@@ -20,13 +18,11 @@
     var self = this;
 
     self.elem = $(elem);
-    self.opts = $.extend({}, defaults, opts);
+    self.opts = $.extend({}, defaults, self.elem.data(), opts);
 
-    //console.log("called new");
+    //console.log("called new",self);
 
     self.init();
-
-    return self;
   }
 
   // show actions 
@@ -54,21 +50,45 @@
     }, self.opts.hideActionDelay);
   };
 
+  // replace this with a newly reloaded version
+  MetaDataView.prototype.reload = function() {
+    var self = this,
+        data = $.parseJSON(self.elem.find(".metaDataParams").html());
+
+    data.name = "RENDERMETADATA";
+    data.param = self.opts.metadata;
+    data.web = data.web || foswiki.getPreference("WEB");
+    data.topic = data.topic || foswiki.getPreference("TOPIC");
+    data.topic = data.web + "." + data.topic;
+    data.render= "on";
+
+    //console.log("reload", data);
+
+    return $.ajax({
+      url: foswiki.getScriptUrl("rest", "RenderPlugin", "tag"),
+      type: "POST",
+      data: data
+    }).then(function(response) {
+      var newElem = $(response).hide();
+      self.elem.replaceWith(newElem);
+      newElem.fadeIn();
+      $(document).trigger("afterReload.metadata", self.opts.metadata);
+    });
+  };
+
+
   // init method
   MetaDataView.prototype.init = function() {
     var self = this;
     
     self.active = false;
 
-    self.elem.find(".metaDataActions").hover(
-      function() {
-        self.active = true;
-      },
-      function() {
-        self.active = false;
-        self.startTimer();
-      }
-    );
+    self.elem.find(".metaDataActions").on("mouseenter", function() {
+      self.active = true;
+    }).on("mouseleave", function() {
+      self.active = false;
+      self.startTimer();
+    });
 
     self.elem.on("mouseenter", ".metaDataRow, tbody tr", function() {
       var $row = $(this), 
@@ -84,7 +104,7 @@
     }).on("mouseleave", ".metaDataRow, tbody tr", function() {
       self.active = false;
       self.startTimer();
-    }).on("click", ".metaDataRow, tbody tr", function(e) {
+    }).on("dblclick", ".metaDataRow, tbody tr", function(e) {
       var $this = $(this), 
           $editAction = $this.find(".metaDataEditAction");
 
@@ -92,7 +112,7 @@
         return;
       }
 
-      $this.effect("highlight");
+      //$this.effect("highlight"); // broken
 
       if ($(e.target).is(".metaDataRow, td")) {
         self.elem.find("tr").removeClass("selected");
@@ -105,40 +125,152 @@
       }
     }).on("click", ".metaDataEditAction", function() {
       var $this = $(this),
-          tr = $this.parents("tr:first"),
-          next = tr.next(),
-          prev = tr.prev();
+          opts = $this.data(),
+          row = $this.parents("tr, .metaDataRow").first(),
+          next = row.next(),
+          prev = row.prev(),
+          webTopic = foswiki.normalizeWebTopicName(foswiki.getPreference("WEB"), opts.topic);
 
-      if (prev.find(".metaDataActions").length) {
-        $this.data("metadata::prev", "#"+prev.find(".metaDataEditAction").attr("id"));
-      } else {
-        $this.data("metadata::prev", undefined);
-      }
-      if (next.find(".metaDataActions").length) {
-        $this.data("metadata::next", "#"+next.find(".metaDataEditAction").attr("id"));
-      } else {
-        $this.data("metadata::next", undefined);
+      opts["metadata::prev"] = prev.find(".metaDataEditAction").data("metadata::name");
+      opts["metadata::next"] = next.find(".metaDataEditAction").data("metadata::name");
+
+      _loadDialog(opts).then(function() {
+        if (foswiki.eventClient) {
+          foswiki.eventClient.send("edit", {
+            channel: opts.topic,
+            web: webTopic[0],
+            topic: webTopic[1]
+          });
+        }
+        $this.trigger("opened");
+      });
+
+      return false;
+    }).on("click", ".metaDataViewAction", function() {
+      var $this = $(this),
+          opts = $this.data(),
+          row = $this.parents("tr, .metaDataRow").first(),
+          next = row.next(),
+          prev = row.prev();
+
+      opts["metadata::prev"] = prev.find(".metaDataViewAction").data("metadata::name");
+      opts["metadata::next"] = next.find(".metaDataViewAction").data("metadata::name");
+
+      _loadDialog(opts).then(function() {
+        $this.trigger("opened");
+      });
+
+      return false;
+    });
+    
+    $(document).on("reload.metadata", function(ev, metadata) {
+      if (typeof(self.opts.metadata === 'undefined') || self.opts.metadata === metadata) {
+        self.reload();
       }
     });
+
+    self.elem.find("tbody").sortable({
+      items: "> tr",
+      cursor: "move",
+      handle: ".metaDataMoveAction",
+      forcePlaceholderSize: true,
+      placeholder: "metaDataPlaceholder",
+      /*axis: "y",*/
+      helper: function(e, ui) {
+        /* preserve width */
+        ui.children().each(function() {
+            var $this = $(this);
+            $this.width($this.width());
+        });
+        return ui;
+      },
+      stop: function(e, ui) {
+        /* undo local width */
+        ui.item.children().each(function() {
+          $(this).css("width", "");
+        });
+      }
+    });
+
   };
+
+  // dialog loader
+  function _loadDialog(opts) {
+    return foswiki.loadTemplate(opts).then(function(data, status, xhr) {
+      var nonce = xhr.getResponseHeader("X-Foswiki-Validation"),
+          $content = $(data.expand);
+
+      if (typeof(nonce) !== 'undefined') {
+        $content.find("form").each(function() {
+          var $form = $(this),
+              $input = $form.find("[name='validation_key']"),
+              metadata = $form.find("[name='metadata']").val();
+
+          if (!$input.length) {
+            $input = $("<input type='hidden' name='validation_key' />").prependTo($form);
+          }
+          $input.val("?"+nonce);
+
+        });
+      }
+
+      $content.hide().appendTo("body").data("autoOpen", true);
+    });
+  }
 
   // register to jquery
   $.fn.metaDataView = function (opts) { 
     return this.each(function() { 
-      if (!$.data(this, "metaDataView")) { 
-        $.data(this, "metaDataView", 
-          new MetaDataView(this, opts)); 
-        } 
+      var $this = $(this);
+      if (!$this.data("metaDataView")) { 
+        $this.data("metaDataView", new MetaDataView(this, opts)); 
+      } 
     }); 
   };
  
   // document ready things
   $(function() {
-    $(".metaDataView").livequery(function() {
-      var $this = $(this),
-          opts = $.extend({}, $this.metadata({type:'elem', name:'script'}));
+    $(document).on("click", ".metaDataNewAction", function() {
+      var $this = $(this), opts = $this.data();
 
-      $this.metaDataView(opts);
+      _loadDialog(opts).then(function() {
+        $this.trigger("opened");
+      });
+    });
+
+    $(".metaDataView").livequery(function() {
+      $(this).metaDataView();
+    });
+
+    $(".metaDataDeleteDialog").livequery(function() {
+      var $dialog = $(this),
+          $form = $dialog.find("form"),
+          metadata = $form.find("[name='metadata']").val();
+
+      $form.ajaxForm({
+        success: function() {
+          $(document).trigger("reload.metadata", metadata);
+        },
+        complete: function() {
+          $dialog.dialog("destroy");
+          $.pnotify({
+            text: $.i18n("Metadata record deleted"),
+            type: "success"
+          });
+        },
+        error: function() {
+          $.blockUI({
+            message: '<h2 class="i18n">Warning</h2><div class="i18n">This topic is locked. <br />Please try again later.</div>',
+            timeout: 3000,
+            onBlock: function() {
+              $('.blockUI').click(function() {
+                $.unblockUI(); 
+                return false;
+              });
+            }
+          });
+        }
+      });
     });
   });
 

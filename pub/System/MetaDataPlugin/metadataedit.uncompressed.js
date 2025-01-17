@@ -1,17 +1,33 @@
 /*
  * MetaData Edit
  *
- * Copyright (c) 2011-2019 Michael Daum http://michaeldaumconsulting.com
+ * Copyright (c) 2011-2025 Michael Daum http://michaeldaumconsulting.com
  *
- * Dual licensed under the MIT and GPL licenses:
- *   http://www.opensource.org/licenses/mit-license.php
- *   http://www.gnu.org/licenses/gpl.html
+ * Licensed under the GPL license http://www.gnu.org/licenses/gpl.html
  *
  */
+
+/*global StrikeOne:false */
+
 "use strict";
 (function($) {
 
-  var defaults = {};
+  var defaults = {
+    pnotify: {
+      text: "",
+      type: "info",
+      sticker: false,
+      icon: false,
+      closer_hover: true,
+      animation: {
+        effect_in: 'fade',
+        effect_out: 'drop',
+        options_out: {easing: 'easeOutCubic'}
+      },
+      animation_speed: 700,
+      after_close: function() { }
+    }
+  };
 
   // class constructor
   function MetaDataEdit(elem, opts) {
@@ -20,6 +36,7 @@
     self.elem = $(elem);
     self.opts = $.extend({}, defaults, opts);
     self.isModified = false;
+    self.doReload = true;
 
     //console.log("called new for elem");
 
@@ -34,8 +51,6 @@
     self.elem.on("dialogclose", function() {
       self.unlock();
     });
-
-    return self;
   }
 
   MetaDataEdit.prototype.unlock = function() {
@@ -45,15 +60,31 @@
       namespace: "MetaDataPlugin",
       method: "unlock",
       params: {
-        "topic": foswiki.getPreference("WEB")+"."+foswiki.getPreference("TOPIC")
+        "topic": self.topic
       },
       success: function() {
         //alert("done");
       },
       error: function(json) {
-        alert(json.error.message);
+        self.notify({
+          type: "error",
+          text: json.error.message,
+        });
       }
     });
+  };
+
+  MetaDataEdit.prototype.close = function() {
+    var self = this;
+
+    try {
+      self.unlock();
+      self.elem.dialog("destroy");
+    } catch(err) {
+      true;
+    }
+
+    self.elem.remove();
   };
 
   // init method called when dialog opened
@@ -64,7 +95,20 @@
 
     self.widget.find(".jqUIDialogDestroy").on("click", function() {
       self.unlock();
+      if (typeof(foswiki.eventClient) !== 'undefined') {
+        foswiki.eventClient.send("cancel", {
+          channel: self.topic
+        });
+      }
     });
+
+    // get topic we are a metadata dialog for
+    self.topic = self.opts.topic;
+    if (typeof(self.topic) === 'undefined') {
+      self.elem.find("[name='topic']:first").each(function() {
+        self.topic = $(this).val();
+      });
+    }
 
     // monitor changes
     self.elem.find("[name]").on("change", function() {
@@ -75,55 +119,102 @@
       }
     });
 
+    // ajaxify form
+    self.form = self.elem.find("form");
+    self.metadata = self.form.find("input[name='metadata']").val();
+
+    if (foswiki.eventClient) {
+      $("<input />").attr({
+        type: "hidden",
+        name: "clientId",
+        value: foswiki.eventClient.id
+      }).prependTo(self.form);
+    }
+
+    self.form.on("submit", function() {
+      var deferreds = [];
+
+      if (!self.form.validate().form()) {
+        return false;
+      }
+
+      self.elem.block({message:""});
+      if (typeof(StrikeOne) !== 'undefined') {
+        StrikeOne.submit(self.form[0]);
+      }
+
+      // get values from natedit
+      self.form.find(".natedit").each(function() {
+        var textarea = $(this),
+            editor = $(this).data("natedit");
+        if (editor.engine) {
+          deferreds.push(editor.engine.beforeSubmit("save"));
+        }
+      });
+
+      $.when(...deferreds).then(function() {
+        self.form.ajaxSubmit({
+          complete: function() {
+            self.form.trigger("done");
+            window.setTimeout(function() {
+              self.close();
+            }, 100);
+          },
+          success: function() {
+            if (typeof(foswiki.eventClient) === 'undefined') {
+              self.notify({
+                text: $.i18n("Saved metadata record"),
+                type: "success"
+              });
+            }
+            if (self.doReload) {
+              //console.log("do reload",self.metadata);
+              $(document).trigger("reload.metadata", self.metadata);
+            } else {
+              self.doReload = true;
+            }
+          },
+          error: function() {
+            self.notify({
+              type: "error",
+              text: $.i18n("There was an error saving a record."),
+            });
+          }
+        });
+      });
+
+      return false;
+    });
+
     // next and prev navigation
     self.widget.find(".metaDataNext, .metaDataPrev").on("click", function() {
       var sel = $(this).attr("selector"),
-          form = self.elem.find("form");
-
-      form.find("input[name='redirectto']").remove(); // no need to redirect to full view
-
-      function openNext() {
-        $(sel).trigger("click").on("opened", function() {
-          // destroy old one
-          try {
-            self.unlock();
-            self.elem.dialog("destroy");
-          } catch(err) {
-            true;
-          }
-          self.elem.unblock();
-          self.elem.remove();
-        });
-      }
+          button = $(".metaDataView .metaDataEditAction[data-metadata='"+self.metadata+"']").filter(function() {
+            return $(this).data("metadata::name") === sel;
+          });
 
       if (self.isModified) {
-        if (typeof(StrikeOne) !== 'undefined') {
-          StrikeOne.submit(form[0]);
-        }
-        form.ajaxSubmit({
-          beforeSubmit: function() {
-            self.elem.block({message:""});
-          },
-          success: function() {
-            $.pnotify({
-              text: $.i18n("Saved metadata record"),
-              type: "success"
-            });
-            openNext();
-          },
-          error: function() {
-            $.pnotify({
-              text: $.i18n("There was an error saving a record"),
-              type: "error"
-            });
-          }
+        self.doReload = false;
+        self.form.trigger("submit").one("done", function() {
+          button.trigger("click");
         });
       } else {
-        openNext();
+        button.trigger("click").one("opened", function() {
+          window.setTimeout(function() {
+            self.close();
+          }, 100);
+        });
       }
 
       return false;
     });
+  };
+
+  MetaDataEdit.prototype.notify = function(opts) {
+    var self = this,
+      thisOpts = $.extend({}, self.opts.pnotify, opts);
+
+    $.pnotify(thisOpts);
   };
 
   // register to jquery

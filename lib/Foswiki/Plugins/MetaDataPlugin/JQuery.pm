@@ -20,7 +20,7 @@ sub new {
       css => ['metadata.css'],
       javascript => ['metadata.js'],
       i18n => $Foswiki::cfg{SystemWebName} . "/MetaDataPlugin/i18n",
-      dependencies => ['ui::dialog', 'ui::button', 'validate', 'form', 'jsonrpc'],
+      dependencies => ['ui', 'ui::dialog', 'ui::button', 'validate', 'form', 'jsonrpc', 'foswikitemplate'],
     ),
     $class
   );
@@ -31,9 +31,9 @@ sub new {
 sub init {
   my $this = shift;
 
-  Foswiki::Func::readTemplate("metadataplugin");
-
   return unless $this->SUPER::init();
+
+  Foswiki::Func::readTemplate("metadataplugin");
 }
 
 1;

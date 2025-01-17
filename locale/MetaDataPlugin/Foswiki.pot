@@ -16,131 +16,92 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: data/Sandbox/TimeTrackerViewTemplate.txt:34
-msgid "Add a new effort"
-msgstr ""
-
-#: data/Sandbox/TimeTrackerViewTemplate.txt:33
-msgid "Add effort"
-msgstr ""
-
-#: templates/metadataplugin.tmpl:121
+#: templates/metadataplugin.tmpl:161
 msgid "Are you sure that you want to delete this record?"
 msgstr ""
 
-#: templates/metadataplugin.tmpl:105 templates/metadataplugin.tmpl:54
-#: templates/metadataplugin.tmpl:82
+#: templates/metadataplugin.tmpl:145 templates/metadataplugin.tmpl:82
 msgid "Cancel"
 msgstr ""
 
-#: data/Sandbox/TimeTracker.txt:71
-msgid "Changed"
+#: templates/metadataplugin.tmpl:111
+msgid "Close"
 msgstr ""
 
-#: templates/metadataplugin.tmpl:119
+#: templates/metadataplugin.tmpl:159
 msgid "Confirmation required"
 msgstr ""
 
-#: data/Sandbox/TimeTracker.txt:33
-msgid "Create a new %1"
+#: templates/metadataplugin.tmpl:120 templates/metadataplugin.tmpl:144
+msgid "Copy"
 msgstr ""
 
-#: templates/metadataplugin.tmpl:6
+#: templates/metadataplugin.tmpl:7
+msgid "Copy %1"
+msgstr ""
+
+#: templates/metadataplugin.tmpl:9
 msgid "Delete"
 msgstr ""
 
-#: data/Sandbox/TimeTrackerEditTemplate.txt:9
-msgid "Details"
-msgstr ""
-
-#: templates/metadataplugin.tmpl:4 templates/metadataplugin.tmpl:71
-msgid "Duplicate"
-msgstr ""
-
-#: lib/Foswiki/Plugins/MetaDataPlugin/Core.pm:850
-#: templates/metadataplugin.tmpl:3 templates/metadataplugin.tmpl:40
+#: lib/Foswiki/Plugins/MetaDataPlugin/Core.pm:1004
+#: templates/metadataplugin.tmpl:5 templates/metadataplugin.tmpl:61
 msgid "Edit"
 msgstr ""
 
-#: data/Sandbox/TimeTrackerViewTemplate.txt:28
-msgid "Edit this effort"
+#: data/System/MetaDataPlugin.txt:154
+#: lib/Foswiki/Plugins/MetaDataPlugin/Core.pm:157
+msgid "Export"
 msgstr ""
 
-#: templates/metadataplugin.tmpl:5 templates/metadataplugin.tmpl:90
+#: lib/Foswiki/Plugins/MetaDataPlugin/Core.pm:192
+msgid "Import"
+msgstr ""
+
+#: templates/metadataplugin.tmpl:8
 msgid "Move"
 msgstr ""
 
-#: data/Sandbox/TimeTracker.txt:19
-msgid "New"
-msgstr ""
-
-#: lib/Foswiki/Plugins/MetaDataPlugin/Core.pm:145
+#: lib/Foswiki/Plugins/MetaDataPlugin/Core.pm:274
 msgid "New %1"
 msgstr ""
 
-#: templates/metadataplugin.tmpl:63
+#: templates/metadataplugin.tmpl:91
 msgid "Next"
 msgstr ""
 
-#: templates/metadataplugin.tmpl:128
+#: templates/metadataplugin.tmpl:168
 msgid "No, thanks"
 msgstr ""
 
-#: data/Sandbox/TimeTrackerEditTemplate.txt:32
-msgid "Notes"
-msgstr ""
-
-#: templates/metadataplugin.tmpl:62
+#: templates/metadataplugin.tmpl:90
 msgid "Previous"
 msgstr ""
 
-#: templates/metadataplugin.tmpl:104 templates/metadataplugin.tmpl:53
 #: templates/metadataplugin.tmpl:81
 msgid "Save"
 msgstr ""
 
-#: data/Sandbox/TimeTracker.txt:48
-msgid "Submit"
+#: templates/metadataplugin.tmpl:132
+msgid "Target Topic"
 msgstr ""
 
-#: data/Sandbox/TimeTrackerViewTemplate.txt:24
-msgid "Sum"
-msgstr ""
-
-#: data/Sandbox/TimeTracker.txt:70
-msgid "Summary"
-msgstr ""
-
-#: templates/metadataplugin.tmpl:141
-msgid "This topic is locked. <br />Please try again later."
-msgstr ""
-
-#: data/Sandbox/TimeTracker.txt:39 data/Sandbox/TimeTracker.txt:69
-#: data/Sandbox/TimeTrackerEditTemplate.txt:14
-#: templates/metadataplugin.tmpl:67
+#: templates/metadataplugin.tmpl:117
 msgid "Title"
 msgstr ""
 
-#: data/Sandbox/TimeTrackerViewTemplate.txt:25
-msgid "Total"
+#: templates/metadataplugin.tmpl:6 templates/metadataplugin.tmpl:96
+msgid "View"
 msgstr ""
 
-#: templates/metadataplugin.tmpl:141 templates/metadataplugin.tmpl:22
+#: templates/metadataplugin.tmpl:6
+msgid "View %1"
+msgstr ""
+
+#: templates/metadataplugin.tmpl:43
 msgid "Warning"
 msgstr ""
 
-#: templates/metadataplugin.tmpl:127
+#: templates/metadataplugin.tmpl:167
 msgid "Yes, delete"
-msgstr ""
-
-#: data/Sandbox/TimeTracker.txt:16
-msgid "flag indicating whether these efforts have already been invoiced"
-msgstr ""
-
-#: data/Sandbox/TimeTracker.txt:14
-msgid "hourly rates"
-msgstr ""
-
-#: data/Sandbox/TimeTracker.txt:15
-msgid "tax fee per effort in percent"
 msgstr ""

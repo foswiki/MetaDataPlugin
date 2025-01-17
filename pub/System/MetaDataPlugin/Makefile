@@ -1,7 +1,7 @@
 FOSWIKI_ROOT?=~/foswiki/trunk/core
 TARGET=metadata.css metadata.js
 
-SOURCE=metadataview.uncompressed.js metadataedit.uncompressed.js
+SOURCE=metadataview.uncompressed.js metadataedit.uncompressed.js metadatabuttons.uncompressed.js
 
 -include $(FOSWIKI_ROOT)/pub/System/JQueryPlugin/Makefile.include
 

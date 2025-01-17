@@ -7,8 +7,8 @@
 }
 .metaDataActions,
 .metaDataView table tr.hover td {
-  border-color:#e4e4e4;
-  background-color:#f4f4f4;
+  background-color: var(--color-hover-background, #ececec) !important;
+  color: var(--color-hover-foreground, #333) !important;
 }
 .metaDataRow, 
 .metaDataView tr td,
@@ -18,19 +18,21 @@
 .metaDataActions {
   display:none;
   position:absolute;
-  top:0;
-  right:7px;
+  top:50%;
+  right:0;
   border-style:solid;
   padding:0 0.2em;
+  min-width:70px;
+  transform:translate(0, -50%);
 }
 .metaDataActions a {
   padding:5px;
+  margin-left:5px;
   display:block;
-  float:left;
   vertical-align:middle;
 }
 .hover .metaDataActions {
-  display:block;
+  display:flex;
 }
 #metaDataForm tr.name {
   display:none;
@@ -40,4 +42,9 @@
   margin:0;
   border:0;
   background:transparent;
+}
+.metaDataViewDialog .foswikiPageForm {
+  margin:0;
+  padding:0;
+  border:0;
 }

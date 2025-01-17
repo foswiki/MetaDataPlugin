@@ -1,6 +1,6 @@
 # Plugin for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# MetaDataPlugin is Copyright (C) 2011-2019 Michael Daum http://michaeldaumconsulting.com
+# MetaDataPlugin is Copyright (C) 2011-2025 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,6 +15,14 @@
 
 package Foswiki::Plugins::MetaDataPlugin;
 
+=begin TML
+
+---+ package Foswiki::Plugins::MetaDataPlugin
+
+base class to hook into the foswiki core
+
+=cut
+
 use strict;
 use warnings;
 
@@ -22,6 +30,7 @@ use Foswiki::Func ();
 use Foswiki::Plugins ();
 use Foswiki::Contrib::JsonRpcContrib ();
 use Foswiki::Plugins::MetaDataPlugin::Core();
+use Foswiki::Plugins::RenderPlugin();
 use Error qw( :try );
 
 use Foswiki::Request ();
@@ -29,126 +38,281 @@ use Foswiki::Request ();
 BEGIN {
   # Backwards compatibility for Foswiki 1.1.x
   unless (Foswiki::Request->can('multi_param')) {
-    no warnings 'redefine';
+    no warnings 'redefine'; ## no critic
     *Foswiki::Request::multi_param = \&Foswiki::Request::param;
     use warnings 'redefine';
   }
 }
 
-our $VERSION = '6.00';
-our $RELEASE = '30 Jan 2019';
+our $VERSION = '7.71';
+our $RELEASE = '%$RELEASE%';
 our $SHORTDESCRIPTION = 'Bring custom meta data to wiki apps';
+our $LICENSECODE = '%$LICENSECODE%';
 our $NO_PREFS_IN_TOPIC = 1;
 our $core;
+our $importer;
+our $exporter;
+our %doneRegisterMeta;
 
-##############################################################################
-sub earlyInitPlugin {
+=begin TML
 
-  my $session = $Foswiki::Plugins::SESSION;
-  $core = new Foswiki::Plugins::MetaDataPlugin::Core($session);
+---++ initPlugin($topic, $web, $user) -> $boolean
 
-  return 0;
-}
+initialize the plugin, automatically called during the core initialization process
 
-##############################################################################
+=cut
+
 sub initPlugin {
 
   # register macro handlers
   Foswiki::Func::registerTagHandler('RENDERMETADATA', sub {
     my $session = shift;
-    return $core->RENDERMETADATA(@_);
+    return getCore()->RENDERMETADATA(@_);
   });
   Foswiki::Func::registerTagHandler('NEWMETADATA', sub {
     my $session = shift;
-    return $core->NEWMETADATA(@_);
+    return getCore()->NEWMETADATA(@_);
+  });
+  Foswiki::Func::registerTagHandler('EXPORTMETADATA', sub {
+    my $session = shift;
+    return getCore()->EXPORTMETADATA(@_);
+  });
+  Foswiki::Func::registerTagHandler('IMPORTMETADATA', sub {
+    my $session = shift;
+    return getCore()->IMPORTMETADATA(@_);
   });
 
-  # register meta definitions
-  # SMELL: can't register meta data by now as some plugins aren't initialized yet
-  registerMetaData();
+  Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "get", sub {
+    my $session = shift;
+    return getCore()->jsonRpcGet(@_);
+  });
 
-#  Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "get", sub {
-#     my $session = shift;
-#    return $core->jsonRpcGet(@_);
-#  });
-
-#  Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "save", sub {
-#     my $session = shift;
-#    return $core->jsonRpcSave(@_);
-#  });
+  Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "save", sub {
+    my $session = shift;
+    return getCore()->jsonRpcSave(@_);
+  });
 
   Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "delete", sub {
     my $session = shift;
-    return $core->jsonRpcDelete(@_);
+    return getCore()->jsonRpcDelete(@_);
   });
 
   Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "lock", sub {
     my $session = shift;
-    return $core->jsonRpcLockTopic(@_);
+    return getCore()->jsonRpcLockTopic(@_);
   });
 
   Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "unlock", sub {
     my $session = shift;
-    return $core->jsonRpcUnlockTopic(@_);
+    return getCore()->jsonRpcUnlockTopic(@_);
   });
 
-  if ($Foswiki::cfg{Plugins}{SolrPlugin} && $Foswiki::cfg{Plugins}{SolrPlugin}{Enabled}) {
+  Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "import", sub {
+    return getImporter(shift)->jsonRpcImport(@_);
+  });
+
+  Foswiki::Contrib::JsonRpcContrib::registerMethod("MetaDataPlugin", "export", sub {
+    return getExporter(shift)->jsonRpcExport(@_);
+  });
+
+  if (exists $Foswiki::cfg{Plugins}{SolrPlugin} && $Foswiki::cfg{Plugins}{SolrPlugin}{Enabled}) {
     require Foswiki::Plugins::SolrPlugin;
     Foswiki::Plugins::SolrPlugin::registerIndexTopicHandler(sub {
-      return $core->solrIndexTopicHandler(@_);
+      return getCore()->solrIndexTopicHandler(@_);
     });
   }
 
+  if ($Foswiki::Plugins::VERSION < 2.6 && exists $Foswiki::cfg{Plugins}{DBCachePlugin} && $Foswiki::cfg{Plugins}{DBCachePlugin}{Enabled}) {
+    registerMetaData(); 
+  }
+
+  # rest handler required for javascript metadata view interface
+  Foswiki::Plugins::RenderPlugin::registerAllowedTag("RENDERMETADATA");
+
+  # SMELL: can't register meta data by now as the core and plugins aren't fully initialized yet
+  # registerMetaData(); 
+
   return 1;
 }
+=begin TML
 
-##############################################################################
+---++ lateInitPlugin() 
+
+Foswiki::Plugins::VERSION >= 2.6
+
+register all known meta data now that all plugins have been init'ed
+
+=cut
+
+sub lateInitPlugin {
+  registerMetaData(); 
+}
+
+=begin TML
+
+---++ getCore() -> $core
+
+returns a singleton Foswiki::Plugins::MetaDataPlugin::Core object for this plugin; a new core is allocated 
+during each session request; once a core has been created it is destroyed during =finishPlugin()=
+
+=cut
+
+sub getCore {
+  my $session = shift;
+
+  unless (defined $core) {
+    $core = Foswiki::Plugins::MetaDataPlugin::Core->new($session);
+  }
+ 
+ return $core; 
+}
+
+=begin TML
+
+---++ getImporter() -> $importer
+
+returns a singleton Foswiki::Plugins::MetaDataPlugin::Importer object for this plugin
+
+=cut
+
+sub getImporter {
+  my $session = shift;
+
+  unless (defined $importer) {
+    require Foswiki::Plugins::MetaDataPlugin::Importer;
+    $importer = Foswiki::Plugins::MetaDataPlugin::Importer->new($session, getCore());
+  }
+  return $importer;
+}
+
+=begin TML
+
+---++ getExporter() -> $exporter
+
+returns a singleton Foswiki::Plugins::MetaDataPlugin::Exporter object for this plugin
+
+=cut
+
+sub getExporter {
+  my $session = shift;
+
+  unless (defined $exporter) {
+    require Foswiki::Plugins::MetaDataPlugin::Exporter;
+    $exporter = Foswiki::Plugins::MetaDataPlugin::Exporter->new($session, getCore());
+  }
+  return $exporter;
+}
+
+=begin TML
+
+---++ finishPlugin
+
+finish the plugin and the core if it has been used,
+automatically called during the core initialization process
+
+=cut
+
 sub finishPlugin {
-  $core = undef;
+  if (defined $core) {
+    $core->finish();
+    undef $core;
+  }
+
+  if (defined $importer) {
+    $importer->finish();
+    undef $importer;
+  }
+
+  if (defined $exporter) {
+    $exporter->finish();
+    undef $exporter;
+  }
+
+  %doneRegisterMeta = (); # do above call in a lazy way
 }
 
-##############################################################################
+
+
+=begin TML
+
+---++ registerDeleteHandler() 
+
+register a handler to be called when a metedata record is deleted
+
+=cut
+
 sub registerDeleteHandler {
-  return $core->registerDeleteHandler(@_);
+  return getCore()->registerDeleteHandler(@_);
 }
 
-##############################################################################
+=begin TML
+
+---++ registerSaveHandler() 
+
+register a handler to be called when a metedata record is deleted
+
+=cut
+
 sub registerSaveHandler {
-  return $core->registerSaveHandler(@_);
+  return getCore()->registerSaveHandler(@_);
 }
 
-##############################################################################
+=begin TML
+
+---++ beforeSaveHandler () 
+
+called during the core's save procedure on anything
+
+=cut
+
 sub beforeSaveHandler { 
-  $core->beforeSaveHandler(@_); 
+  getCore()->beforeSaveHandler(@_); 
 }
 
-##############################################################################
+=begin TML
+
+---++ registerMetaData() 
+
+register a new meta data record type
+
+=cut
+
 sub registerMetaData {
-  my $topics = shift;
+  my $baseWeb = shift;
 
   my $session = $Foswiki::Plugins::SESSION;
-  my $baseWeb = $session->{webName};
+  $baseWeb //= $session->{webName};
+  $baseWeb =~ s/\//\./g;
   my $baseTopic = $session->{topicName};
 
-  $topics = Foswiki::Func::getPreferencesValue("WEBMETADATA") || ''
-    unless defined $topics;
+  return if $doneRegisterMeta{$baseWeb};
+  $doneRegisterMeta{$baseWeb} = 1;
 
-  $topics =~ s/%TOPIC%/$baseTopic/g;
+  Foswiki::Func::pushTopicContext($baseWeb, $baseTopic);
+  my $topics = Foswiki::Func::getPreferencesValue("WEBMETADATA") || '';
+  Foswiki::Func::popTopicContext();
+
   $topics =~ s/%WEB%/$baseWeb/g;
+  $topics =~ s/%TOPIC%/$baseTopic/g;
 
   foreach my $item (split(/\s*,\s*/, $topics)) {
     my ($web, $topic) = Foswiki::Func::normalizeWebTopicName($baseWeb, $item);
     my $metaDef = getMetaDataDefinition($web, $topic);
+    #print STDERR "reading $web.$topic....metaDef=".(defined $metaDef? $metaDef->{key}:'undef')."\n";
     next unless defined $metaDef;
-    my ($key) = topicName2MetaData($topic);
-    #print STDERR "meta data key = $key\n";
-    Foswiki::Meta::registerMETA($key, %$metaDef); 
+    Foswiki::Meta::registerMETA($metaDef->{key}, %$metaDef); 
   }
 }
 
-##############################################################################
-# convert a web.topic pointing to a DataForm definition to a pair
-# (key, alias) used to register metadata types based on this DataForm
+=begin TML
+
+---++ ObjectMethod topicName2MetaData($topic) 
+
+convert a web.topic pointing to a DataForm definition to a pair
+(key, alias) used to register metadata types based on this DataForm
+
+=cut
+
 sub topicName2MetaData {
   my $topic = shift;
 
@@ -172,7 +336,12 @@ sub topicName2MetaData {
   return ($key, $alias);
 }
 
-##############################################################################
+=begin TML
+
+---++ ObjectMethod getMetaDataDefinition($web, $topic) -> $def
+
+=cut
+
 sub getMetaDataDefinition {
   my ($web, $topic) = @_;
 
@@ -182,7 +351,7 @@ sub getMetaDataDefinition {
   my $session = $Foswiki::Plugins::SESSION;
 
   try {
-    $formDef = new Foswiki::Form($session, $web, $topic);
+    $formDef = Foswiki::Form->new($session, $web, $topic);
   } catch Error::Simple with {
 
     # just in case, cus when this fails it takes down more of foswiki
@@ -220,6 +389,7 @@ sub getMetaDataDefinition {
 
   my ($key, $alias) = topicName2MetaData($topic);
   my $metaDef = {
+    key => $key,
     alias => $alias,
     many => 1,
     form => $web.'.'.$topic,
