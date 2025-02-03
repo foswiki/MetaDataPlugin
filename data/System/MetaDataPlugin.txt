@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="micha" comment="reprev" date="1574855725" format="1.1" reprev="2" version="2"}%
+%META:TOPICINFO{author="ProjectContributor" comment="" date="1738606024" format="1.1"  version="1"}%
 ---+!! %TOPIC%
 %FORMFIELD{"Description"}%
 
@@ -281,6 +281,6 @@ have a database of efforts recorded on that tracker.
 %META:FIELD{name="License" title="License" value="[[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]]"}%
 %META:FIELD{name="Home" title="Home" value="Foswiki:Extensions/%25TOPIC%25"}%
 %META:FIELD{name="Support" title="Support" value="Foswiki:Support/%25TOPIC%25"}%
-%META:FILEATTACHMENT{name="MetaDataPluginSnap1.png" attachment="MetaDataPluginSnap1.png" attr="" comment="" date="1548859142" size="27517" user="ProjectContributor" version="1"}%
-%META:FILEATTACHMENT{name="MetaDataPluginSnap2.png" attachment="MetaDataPluginSnap2.png" attr="" comment="" date="1548859142" size="18653" user="ProjectContributor" version="1"}%
-%META:FILEATTACHMENT{name="MetaDataPluginSnap3.png" attachment="MetaDataPluginSnap3.png" attr="" comment="" date="1548859142" size="33426" user="ProjectContributor" version="1"}%
+%META:FILEATTACHMENT{name="MetaDataPluginSnap1.png" attachment="MetaDataPluginSnap1.png" attr="" comment="" date="1738606024" size="27517" user="ProjectContributor" version="1"}%
+%META:FILEATTACHMENT{name="MetaDataPluginSnap2.png" attachment="MetaDataPluginSnap2.png" attr="" comment="" date="1738606024" size="18653" user="ProjectContributor" version="1"}%
+%META:FILEATTACHMENT{name="MetaDataPluginSnap3.png" attachment="MetaDataPluginSnap3.png" attr="" comment="" date="1738606024" size="33426" user="ProjectContributor" version="1"}%
