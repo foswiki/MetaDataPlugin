@@ -732,7 +732,6 @@ sub renderMetaData {
     next if defined $theExclude && $excludeMap{$name};
 
     $index++;
-    last if $theLimit && $index > $theLimit;
     next if $theSkip && $index <= $theSkip;
 
     # loop over all fields of a record
@@ -1042,6 +1041,7 @@ sub renderMetaData {
     $row =~ s/\$formatTime\((.*?)(?:,\s*'([^']*?)')?\)/Foswiki::Func::formatTime($1, $2 || $theDateFormat)/ge;
 
     push @result, $row unless $theHideEmpty && $row eq '';
+    last if $theLimit && scalar(@result) >= $theLimit;
   }
 
   return '' if $theHideEmpty && !@result;
@@ -1265,9 +1265,10 @@ sub beforeSaveHandler {
       $fieldDef = $formDef->getField($field) if $formDef;
       if ($fieldDef) {
         if ($fieldDef->isMultiValued) {
+          my $sep = $fieldDef->can("param") ? ($fieldDef->param("separator") ||", ") : ", ";
           my @value = $request->multi_param($urlParam);
           if (@value) {
-            $value = join(", ", @value);
+            $value = join($sep, @value);
             $value =~ s/,\s*$//g;
           }
         } else {

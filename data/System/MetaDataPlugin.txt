@@ -217,6 +217,7 @@ have a database of efforts recorded on that tracker.
 
 ---++ Change History
 %TABLE{columnwidths="7em" tablewidth="100%"}%
+|  03 Jan 2025: | fixed skip and limit params not working as they should |
 |  17 Apr 2024: | fixed duplicate action |
 |  24 Jan 2023: | added =key= parameter to RENDERMETADATA |
 |  24 Jul 2022: | fix exporter to make sure the pub dir is actually present |

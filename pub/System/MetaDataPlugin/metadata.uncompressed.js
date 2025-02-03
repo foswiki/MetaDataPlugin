@@ -282,7 +282,7 @@
 /*
  * MetaData Edit
  *
- * Copyright (c) 2011-2024 Michael Daum http://michaeldaumconsulting.com
+ * Copyright (c) 2011-2025 Michael Daum http://michaeldaumconsulting.com
  *
  * Licensed under the GPL license http://www.gnu.org/licenses/gpl.html
  *
@@ -521,7 +521,7 @@
 /*
  * MetaData Buttons
  *
- * Copyright (c) 2019-2022 Michael Daum http://michaeldaumconsulting.com
+ * Copyright (c) 2019-2025 Michael Daum http://michaeldaumconsulting.com
  *
  * Licensed under the GPL license http://www.gnu.org/licenses/gpl.html
  *

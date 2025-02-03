@@ -44,7 +44,7 @@ BEGIN {
   }
 }
 
-our $VERSION = '7.71';
+our $VERSION = '7.72';
 our $RELEASE = '%$RELEASE%';
 our $SHORTDESCRIPTION = 'Bring custom meta data to wiki apps';
 our $LICENSECODE = '%$LICENSECODE%';
